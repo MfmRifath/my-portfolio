@@ -4,10 +4,10 @@ import { FiMenu, FiX } from "react-icons/fi";
 
 const navLinks = [
   "Home",
-  "About Me",
+  "Experians",
   "Services",
   "Projects",
-  "Testimonials",
+  "Cretificates",
   "Contact",
 ];
 

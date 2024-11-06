@@ -41,26 +41,26 @@ const HeroSection: React.FC = () => {
   };
 
   const buttonHover = {
-    hover: { scale: 1.1, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.3)" },
+    hover: { scale: 1.05, boxShadow: "0px 8px 30px rgba(0, 0, 0, 0.3)" },
     tap: { scale: 0.95 },
   };
 
   return (
     <section
-      className="relative text-white p-8 sm:p-10 md:p-20 flex flex-col-reverse md:flex-row items-center justify-between gap-10"
+      className="relative text-white p-10 md:p-20 flex flex-col md:flex-row items-center justify-between gap-16"
       id="home"
       ref={ref}
     >
-      {/* Background Image with Overlay */}
+      {/* Dynamic Background */}
       <div
-        className="absolute inset-0 bg-cover bg-fixed bg-center opacity-50"
-        style={{ backgroundImage: "url('/Landscape_Background.jpg')" }} // Replace with actual path
+        className="absolute inset-0 bg-cover bg-fixed bg-center opacity-40 blur-md"
+        style={{ backgroundImage: "url('/Landscape_Background.jpg')" }}
       ></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-blue-900 opacity-80"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-blue-900 opacity-90"></div>
 
       {/* Text Content */}
       <motion.div
-        className="relative max-w-lg text-center md:text-left space-y-6"
+        className="relative z-10 max-w-lg text-center md:text-left space-y-8"
         variants={containerVariants}
         initial="hidden"
         animate={controls}
@@ -69,7 +69,10 @@ const HeroSection: React.FC = () => {
           className="text-4xl sm:text-5xl font-extrabold leading-tight"
           variants={itemVariants}
         >
-          Hi, I'm <span className="text-blue-400">RIFATH MFM</span>
+          Hi, I'm{" "}
+          <span className="bg-gradient-to-r from-blue-400 to-cyan-500 text-transparent bg-clip-text">
+            RIFATH MFM
+          </span>
         </motion.h1>
         <motion.div variants={itemVariants}>
           <TypeAnimation
@@ -97,11 +100,11 @@ const HeroSection: React.FC = () => {
           experiences.
         </motion.p>
         <motion.div
-          className="flex flex-col sm:flex-row gap-4"
+          className="flex flex-col sm:flex-row gap-6 justify-center md:justify-start"
           variants={itemVariants}
         >
           <motion.button
-            className="bg-gradient-to-r from-blue-500 to-blue-400 text-black font-bold py-3 px-8 rounded-full shadow-lg hover:from-blue-600 hover:to-blue-500"
+            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-10 rounded-full shadow-lg hover:from-blue-600 hover:to-cyan-600"
             variants={buttonHover}
             whileHover="hover"
             whileTap="tap"
@@ -109,7 +112,7 @@ const HeroSection: React.FC = () => {
             Let's Work Together
           </motion.button>
           <motion.button
-            className="bg-gray-800 border-2 border-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-gray-700"
+            className="bg-transparent border-2 border-blue-500 text-white font-bold py-3 px-10 rounded-full shadow-lg hover:bg-blue-500 hover:text-black"
             variants={buttonHover}
             whileHover="hover"
             whileTap="tap"
@@ -120,7 +123,7 @@ const HeroSection: React.FC = () => {
 
         {/* Social Media Icons */}
         <motion.div
-          className="flex justify-center md:justify-start space-x-6 text-3xl text-blue-400 mt-4"
+          className="flex justify-center md:justify-start space-x-8 text-4xl text-blue-400 mt-6"
           variants={itemVariants}
         >
           <motion.a
@@ -152,7 +155,7 @@ const HeroSection: React.FC = () => {
 
       {/* Profile Image */}
       <motion.div
-        className="relative shadow-2xl overflow-hidden rounded-lg max-w-sm"
+        className="relative z-10 shadow-2xl overflow-hidden rounded-full max-w-xs border-8 border-gradient-to-r from-blue-500 to-cyan-500"
         variants={imageVariants}
         initial="hidden"
         animate={controls}
@@ -161,7 +164,7 @@ const HeroSection: React.FC = () => {
         <img
           src="/profileimg.png" // Replace with actual profile image path
           alt="Profile"
-          className="w-full h-auto object-cover border-4 border-blue-500 rounded-lg"
+          className="w-full h-full object-cover rounded-full"
         />
       </motion.div>
     </section>

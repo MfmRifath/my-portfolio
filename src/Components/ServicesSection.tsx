@@ -8,89 +8,145 @@ import {
   FaRobot,
   FaShieldAlt,
   FaChartLine,
+  FaCogs,
+  FaVrCardboard,
+  FaBusinessTime,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 const services = [
   {
-    icon: <FaPaintBrush className="text-blue-500 text-5xl mb-4 mx-auto" />,
+    icon: FaPaintBrush,
     title: "UI/UX Design",
     description:
-      "Creating intuitive and user-friendly designs that enhance user experience.",
+      "Crafting visually appealing and intuitive designs to enhance user experience.",
+    color: "text-blue-500",
   },
   {
-    icon: <FaLaptopCode className="text-green-500 text-5xl mb-4 mx-auto" />,
+    icon: FaLaptopCode,
     title: "Web Development",
     description:
-      "Building responsive and high-performance websites using modern technologies.",
+      "Developing responsive and high-performance web applications tailored to your needs.",
+    color: "text-green-500",
   },
   {
-    icon: <FaMobileAlt className="text-purple-500 text-5xl mb-4 mx-auto" />,
+    icon: FaMobileAlt,
     title: "Mobile Development",
     description:
-      "Developing sleek, user-friendly cross-platform mobile applications.",
+      "Building seamless cross-platform mobile applications with exceptional performance.",
+    color: "text-purple-500",
   },
   {
-    icon: <FaDatabase className="text-red-500 text-5xl mb-4 mx-auto" />,
+    icon: FaDatabase,
     title: "Database Management",
     description:
-      "Designing and maintaining robust and scalable database systems.",
+      "Designing scalable database solutions to securely manage your data.",
+    color: "text-red-500",
   },
   {
-    icon: <FaCloud className="text-yellow-500 text-5xl mb-4 mx-auto" />,
+    icon: FaCloud,
     title: "Cloud Services",
     description:
-      "Offering scalable cloud solutions to meet your business needs.",
+      "Providing scalable cloud computing solutions to streamline your business operations.",
+    color: "text-yellow-500",
   },
   {
-    icon: <FaRobot className="text-pink-500 text-5xl mb-4 mx-auto" />,
+    icon: FaRobot,
     title: "Machine Learning",
     description:
-      "Implementing AI and ML models to automate and optimize processes.",
+      "Implementing advanced AI solutions to optimize processes and drive innovation.",
+    color: "text-pink-500",
   },
   {
-    icon: <FaShieldAlt className="text-teal-500 text-5xl mb-4 mx-auto" />,
+    icon: FaShieldAlt,
     title: "Cybersecurity",
     description:
-      "Ensuring the security of your systems and data with advanced solutions.",
+      "Protecting your digital assets with cutting-edge security solutions.",
+    color: "text-teal-500",
   },
   {
-    icon: <FaChartLine className="text-indigo-500 text-5xl mb-4 mx-auto" />,
+    icon: FaChartLine,
     title: "Data Analytics",
     description:
-      "Providing actionable insights through comprehensive data analysis.",
+      "Deriving actionable insights from complex data to inform strategic decisions.",
+    color: "text-indigo-500",
+  },
+  {
+    icon: FaCogs,
+    title: "DevOps & CI/CD",
+    description:
+      "Automating and streamlining development pipelines for faster, reliable delivery.",
+    color: "text-orange-500",
+  },
+  {
+    icon: FaVrCardboard,
+    title: "AR/VR Solutions",
+    description:
+      "Creating immersive augmented and virtual reality experiences for various industries.",
+    color: "text-purple-500",
+  },
+  {
+    icon: FaBusinessTime,
+    title: "IT Consulting",
+    description:
+      "Providing expert advice and strategic planning to achieve your IT goals.",
+    color: "text-blue-500",
   },
 ];
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
 
 const ServicesSection: React.FC = () => {
   return (
     <section
-      className="bg-gradient-to-b from-gray-50 to-gray-100 p-12"
+      className="bg-gradient-to-b from-white to-gray-100 py-20 text-gray-800"
       id="services"
     >
-      <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-8">
-        My Services
-      </h2>
-      <p className="text-center text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
-        I offer a wide range of services tailored to meet the unique needs of
-        each project, from design and development to data-driven solutions.
+      <h2 className="text-5xl font-extrabold text-center mb-12">My Services</h2>
+      <p className="text-center text-gray-600 max-w-3xl mx-auto mb-16 leading-relaxed">
+        I provide a comprehensive range of services to help businesses thrive in
+        a digital-first world.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 max-w-7xl mx-auto"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ staggerChildren: 0.3 }}
+      >
         {services.map((service, index) => (
           <motion.div
             key={index}
-            whileHover={{ scale: 1.05 }}
-            className="bg-white shadow-lg rounded-xl p-6 text-center transition-transform transform duration-300"
+            variants={cardVariants}
+            className="group relative cursor-pointer"
           >
-            {service.icon}
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              {service.title}
-            </h3>
-            <p className="text-gray-600">{service.description}</p>
+            <div className="relative w-full h-64 rounded-xl overflow-hidden shadow-lg transform transition-transform duration-300 hover:scale-105">
+              {/* Front Card */}
+              <div className="absolute inset-0 bg-white text-center p-6 flex flex-col items-center justify-center">
+                <div
+                  className={`text-6xl ${service.color} mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                >
+                  <service.icon size={48} />
+                </div>
+                <h3 className="text-xl font-bold">{service.title}</h3>
+              </div>
+            </div>
+
+            {/* Back Card */}
+            <motion.div
+              className="absolute inset-0 bg-blue-50 text-gray-700 text-center p-6 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              variants={cardVariants}
+            >
+              <h3 className="text-2xl font-bold mb-4">{service.title}</h3>
+              <p className="text-sm">{service.description}</p>
+            </motion.div>
           </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 };
