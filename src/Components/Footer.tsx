@@ -27,7 +27,7 @@ const Footer: React.FC = () => {
 
   return (
     <motion.footer
-      className="bg-gradient-to-t from-gray-900 to-gray-800 text-white py-8"
+      className="bg-gradient-to-t from-gray-900 to-black text-white py-8"
       initial="hidden"
       animate="visible"
       variants={footerVariants}

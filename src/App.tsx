@@ -11,6 +11,7 @@ import ProjectIdeaSection from "./Components/ProjectIdeaSection";
 import Footer from "./Components/Footer";
 import EducationExperience from "./Components/AboutSection";
 import CertificationsSection from "./Components/Cretificates";
+import { ThemeProvider } from "./Components/ThemProvider";
 
 const SectionWrapper: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -50,48 +51,49 @@ const SectionWrapper: React.FC<{ children: React.ReactNode }> = ({
 
 const App: React.FC = () => {
   return (
-    <div className="App bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
-      {/* Adding smooth scrolling */}
-      <style>
-        {`
-          html {
-            scroll-behavior: smooth;
-          }
-        `}
-      </style>
+    <ThemeProvider>
+      <div className="App bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900 dark:from-black dark:to-gray-900">
+        {/* Adding smooth scrolling */}
+        <style>
+          {`
+            html {
+              scroll-behavior: smooth;
+            }
+          `}
+        </style>
+        {/* Header */}
+        <Header />
 
-      {/* Header */}
-      <Header />
+        {/* Sections */}
+        <main>
+          <HeroSection />
+          <SectionWrapper>
+            <EducationExperience />
+          </SectionWrapper>
+          <SectionWrapper>
+            <SkillsSection />
+          </SectionWrapper>
+          <SectionWrapper>
+            <ServicesSection />
+          </SectionWrapper>
+          <SectionWrapper>
+            <ProjectsSection />
+          </SectionWrapper>
+          <SectionWrapper>
+            <CertificationsSection />
+          </SectionWrapper>
+          <SectionWrapper>
+            <ProjectIdeaSection />
+          </SectionWrapper>
+          <SectionWrapper>
+            <ContactForm />
+          </SectionWrapper>
+        </main>
 
-      {/* Sections */}
-      <main>
-        <HeroSection />
-        <SectionWrapper>
-          <EducationExperience />
-        </SectionWrapper>
-        <SectionWrapper>
-          <SkillsSection />
-        </SectionWrapper>
-        <SectionWrapper>
-          <ServicesSection />
-        </SectionWrapper>
-        <SectionWrapper>
-          <ProjectsSection />
-        </SectionWrapper>
-        <SectionWrapper>
-          <CertificationsSection />
-        </SectionWrapper>
-        <SectionWrapper>
-          <ProjectIdeaSection />
-        </SectionWrapper>
-        <SectionWrapper>
-          <ContactForm />
-        </SectionWrapper>
-      </main>
-
-      {/* Footer */}
-      <Footer />
-    </div>
+        {/* Footer */}
+        <Footer />
+      </div>
+    </ThemeProvider>
   );
 };
 

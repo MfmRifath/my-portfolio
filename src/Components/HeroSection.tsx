@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
-import { FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa";
+import { FaLinkedin, FaTwitter, FaGithub, FaArrowRight } from "react-icons/fa";
 import { motion, useAnimation } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import { TypeAnimation } from "react-type-animation"; // Install with `npm install react-type-animation`
+import { TypeAnimation } from "react-type-animation";
+import { useTheme } from "./ThemProvider"; // Import ThemeProvider hook
 
 const HeroSection: React.FC = () => {
   const controls = useAnimation();
@@ -10,6 +11,8 @@ const HeroSection: React.FC = () => {
     triggerOnce: true,
     threshold: 0.1,
   });
+
+  const { theme } = useTheme(); // Use theme from context
 
   useEffect(() => {
     if (inView) {
@@ -47,16 +50,20 @@ const HeroSection: React.FC = () => {
 
   return (
     <section
-      className="relative text-white p-10 md:p-20 flex flex-col md:flex-row items-center justify-between gap-16"
+      className={`relative p-10 md:p-20 flex flex-col md:flex-row items-center justify-between gap-16 ${
+        theme === "dark" ? "text-white" : "text-gray-900"
+      }`}
       id="home"
       ref={ref}
     >
       {/* Dynamic Background */}
       <div
-        className="absolute inset-0 bg-cover bg-fixed bg-center opacity-40 blur-md"
-        style={{ backgroundImage: "url('/Landscape_Background.jpg')" }}
+        className={`absolute inset-0 bg-cover bg-fixed bg-center opacity-40 blur-md ${
+          theme === "dark"
+            ? "bg-gradient-to-br from-black via-gray-900 to-blue-900"
+            : "bg-gradient-to-br from-gray-100 via-gray-200 to-blue-50"
+        }`}
       ></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-blue-900 opacity-90"></div>
 
       {/* Text Content */}
       <motion.div
@@ -70,16 +77,22 @@ const HeroSection: React.FC = () => {
           variants={itemVariants}
         >
           Hi, I'm{" "}
-          <span className="bg-gradient-to-r from-blue-400 to-cyan-500 text-transparent bg-clip-text">
+          <span
+            className={`bg-gradient-to-r ${
+              theme === "dark"
+                ? "from-blue-400 to-cyan-500"
+                : "from-blue-600 to-cyan-700"
+            } text-transparent bg-clip-text`}
+          >
             RIFATH MFM
           </span>
         </motion.h1>
         <motion.div variants={itemVariants}>
           <TypeAnimation
             sequence={[
-              "Full Stack Developer",
-              1000,
               "Computer Engineer",
+              1000,
+              "Full Stack Developer",
               1000,
               "Creative Problem Solver",
               1000,
@@ -87,12 +100,16 @@ const HeroSection: React.FC = () => {
               1000,
             ]}
             speed={50}
-            className="text-2xl sm:text-3xl font-semibold text-blue-300"
+            className={`text-2xl sm:text-3xl font-semibold ${
+              theme === "dark" ? "text-blue-300" : "text-blue-600"
+            }`}
             repeat={Infinity}
           />
         </motion.div>
         <motion.p
-          className="text-md sm:text-lg text-gray-300 leading-relaxed"
+          className={`text-md sm:text-lg leading-relaxed ${
+            theme === "dark" ? "text-gray-300" : "text-gray-700"
+          }`}
           variants={itemVariants}
         >
           I specialize in crafting high-performance web and mobile applications
@@ -103,16 +120,27 @@ const HeroSection: React.FC = () => {
           className="flex flex-col sm:flex-row gap-6 justify-center md:justify-start"
           variants={itemVariants}
         >
+          {/* Primary Button */}
           <motion.button
-            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-10 rounded-full shadow-lg hover:from-blue-600 hover:to-cyan-600"
+            className={`py-3 px-10 font-bold rounded-full shadow-lg transition-all ${
+              theme === "dark"
+                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600"
+                : "bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-cyan-800"
+            }`}
             variants={buttonHover}
             whileHover="hover"
             whileTap="tap"
           >
-            Let's Work Together
+            Let’s Work Together
           </motion.button>
+
+          {/* Secondary Button */}
           <motion.button
-            className="bg-transparent border-2 border-blue-500 text-white font-bold py-3 px-10 rounded-full shadow-lg hover:bg-blue-500 hover:text-black"
+            className={`py-3 px-10 font-bold rounded-full border-2 shadow-lg transition-all ${
+              theme === "dark"
+                ? "border-blue-500 text-white hover:bg-blue-500 hover:text-black"
+                : "border-blue-600 text-gray-900 hover:bg-blue-600 hover:text-white"
+            }`}
             variants={buttonHover}
             whileHover="hover"
             whileTap="tap"
@@ -123,39 +151,36 @@ const HeroSection: React.FC = () => {
 
         {/* Social Media Icons */}
         <motion.div
-          className="flex justify-center md:justify-start space-x-8 text-4xl text-blue-400 mt-6"
+          className={`flex justify-center md:justify-start space-x-8 text-4xl ${
+            theme === "dark" ? "text-blue-400" : "text-blue-600"
+          } mt-6`}
           variants={itemVariants}
         >
-          <motion.a
-            href="https://www.linkedin.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-blue-500 transition-transform transform hover:scale-125"
-          >
-            <FaLinkedin />
-          </motion.a>
-          <motion.a
-            href="https://www.twitter.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-blue-500 transition-transform transform hover:scale-125"
-          >
-            <FaTwitter />
-          </motion.a>
-          <motion.a
-            href="https://www.github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-blue-500 transition-transform transform hover:scale-125"
-          >
-            <FaGithub />
-          </motion.a>
+          {[
+            { icon: <FaLinkedin />, link: "https://www.linkedin.com" },
+            { icon: <FaTwitter />, link: "https://www.twitter.com" },
+            { icon: <FaGithub />, link: "https://www.github.com" },
+          ].map((social, index) => (
+            <motion.a
+              key={index}
+              href={social.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-500 transition-transform transform hover:scale-125"
+            >
+              {social.icon}
+            </motion.a>
+          ))}
         </motion.div>
       </motion.div>
 
       {/* Profile Image */}
       <motion.div
-        className="relative z-10 shadow-2xl overflow-hidden rounded-full max-w-xs border-8 border-gradient-to-r from-blue-500 to-cyan-500"
+        className={`relative z-10 shadow-2xl overflow-hidden rounded-full max-w-xs border-[10px] ${
+          theme === "dark"
+            ? "border-gradient-to-r from-blue-500 to-cyan-500"
+            : "border-gradient-to-r from-blue-600 to-cyan-700"
+        }`}
         variants={imageVariants}
         initial="hidden"
         animate={controls}
@@ -166,6 +191,27 @@ const HeroSection: React.FC = () => {
           alt="Profile"
           className="w-full h-full object-cover rounded-full"
         />
+      </motion.div>
+
+      {/* Scroll Down Indicator */}
+      <motion.div
+        className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+      >
+        <FaArrowRight
+          className={`text-2xl ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          } rotate-90`}
+        />
+        <p
+          className={`text-sm mt-2 ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
+          Scroll Down
+        </p>
       </motion.div>
     </section>
   );

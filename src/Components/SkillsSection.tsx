@@ -21,8 +21,9 @@ import {
   SiDevpost,
   SiSpringboot,
   SiMongodb,
-  SiExpress,
 } from "react-icons/si";
+import { useTheme } from "./ThemProvider";
+// Import your ThemeProvider hook
 
 const skills = [
   {
@@ -118,6 +119,8 @@ const skills = [
 ];
 
 const SkillsSection: React.FC = () => {
+  const { theme } = useTheme(); // Get current theme
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -133,11 +136,15 @@ const SkillsSection: React.FC = () => {
 
   return (
     <section
-      className="bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 py-20 text-white"
+      className={`py-20 ${
+        theme === "dark"
+          ? "bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white"
+          : "bg-gradient-to-b from-gray-100 via-gray-50 to-white text-gray-900"
+      }`}
       id="skills"
     >
       <h2 className="text-5xl font-extrabold text-center mb-12">My Skills</h2>
-      <p className="text-center text-gray-400 max-w-3xl mx-auto mb-16 leading-relaxed">
+      <p className="text-center max-w-3xl mx-auto mb-16 leading-relaxed">
         Through dedicated learning and hands-on projects, I’ve cultivated a
         robust skill set across diverse technologies and disciplines.
       </p>
@@ -152,20 +159,30 @@ const SkillsSection: React.FC = () => {
         {skills.map((skill, index) => (
           <motion.div
             key={index}
-            className="relative group text-center"
+            className={`relative group text-center ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            } shadow-lg rounded-lg p-6 transform hover:scale-105 transition-transform`}
             variants={circleVariants}
           >
             <div className="w-24 h-24 mx-auto relative">
               <motion.div
-                className="absolute inset-0 flex items-center justify-center rounded-full border-8 border-gray-700 group-hover:border-blue-500 transition-all duration-500"
+                className="absolute inset-0 flex items-center justify-center rounded-full border-8"
                 style={{
                   borderColor: `conic-gradient(
                     from 0deg, 
-                    #3b82f6 ${skill.level}%, 
-                    #374151 ${skill.level}%)`,
+                    ${theme === "dark" ? "#3b82f6" : "#2563eb"} ${
+                    skill.level
+                  }%, 
+                    ${theme === "dark" ? "#374151" : "#d1d5db"} ${
+                    skill.level
+                  }%)`,
                 }}
               >
-                <div className="text-2xl font-bold text-blue-400">
+                <div
+                  className={`text-2xl font-bold ${
+                    theme === "dark" ? "text-blue-400" : "text-blue-600"
+                  }`}
+                >
                   {skill.level}%
                 </div>
               </motion.div>
@@ -184,7 +201,11 @@ const SkillsSection: React.FC = () => {
           href="#projects"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition-all transform"
+          className={`py-3 px-8 font-semibold rounded-lg shadow-lg transition-all transform ${
+            theme === "dark"
+              ? "bg-blue-500 hover:bg-blue-600 text-white"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
         >
           View My Projects
         </motion.a>

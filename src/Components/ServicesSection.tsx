@@ -13,6 +13,8 @@ import {
   FaBusinessTime,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { useTheme } from "./ThemProvider";
+// Ensure the path is correct
 
 const services = [
   {
@@ -100,13 +102,23 @@ const cardVariants = {
 };
 
 const ServicesSection: React.FC = () => {
+  const { theme } = useTheme(); // Access the theme context
+
   return (
     <section
-      className="bg-gradient-to-b from-white to-gray-100 py-20 text-gray-800"
+      className={`py-20 ${
+        theme === "dark"
+          ? "bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white"
+          : "bg-gradient-to-b from-white to-gray-100 text-gray-800"
+      }`}
       id="services"
     >
       <h2 className="text-5xl font-extrabold text-center mb-12">My Services</h2>
-      <p className="text-center text-gray-600 max-w-3xl mx-auto mb-16 leading-relaxed">
+      <p
+        className={`text-center max-w-3xl mx-auto mb-16 leading-relaxed ${
+          theme === "dark" ? "text-gray-400" : "text-gray-600"
+        }`}
+      >
         I provide a comprehensive range of services to help businesses thrive in
         a digital-first world.
       </p>
@@ -122,23 +134,33 @@ const ServicesSection: React.FC = () => {
           <motion.div
             key={index}
             variants={cardVariants}
-            className="group relative cursor-pointer"
+            className={`relative group rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 shadow-lg ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
           >
-            <div className="relative w-full h-64 rounded-xl overflow-hidden shadow-lg transform transition-transform duration-300 hover:scale-105">
-              {/* Front Card */}
-              <div className="absolute inset-0 bg-white text-center p-6 flex flex-col items-center justify-center">
-                <div
-                  className={`text-6xl ${service.color} mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-                >
-                  <service.icon size={48} />
-                </div>
-                <h3 className="text-xl font-bold">{service.title}</h3>
+            {/* Front Card */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
+              <div
+                className={`text-6xl ${service.color} mb-4 group-hover:opacity-80`}
+              >
+                <service.icon />
               </div>
+              <h3
+                className={`text-xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-800"
+                }`}
+              >
+                {service.title}
+              </h3>
             </div>
 
             {/* Back Card */}
             <motion.div
-              className="absolute inset-0 bg-blue-50 text-gray-700 text-center p-6 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              className={`absolute inset-0 text-center p-6 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                theme === "dark"
+                  ? "bg-gray-700 text-white"
+                  : "bg-blue-50 text-gray-700"
+              }`}
               variants={cardVariants}
             >
               <h3 className="text-2xl font-bold mb-4">{service.title}</h3>

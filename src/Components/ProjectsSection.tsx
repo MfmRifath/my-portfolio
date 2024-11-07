@@ -5,6 +5,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { Pagination, Navigation } from "swiper/modules";
+import { useTheme } from "./ThemProvider";
 
 const projects = [
   {
@@ -31,10 +32,15 @@ const projects = [
 
 const ProjectsSection: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const { theme } = useTheme(); // Get the current theme
 
   return (
     <section
-      className="bg-gradient-to-b from-gray-900 to-black text-white py-20"
+      className={`py-20 ${
+        theme === "dark"
+          ? "bg-gradient-to-b from-gray-900 to-black text-white"
+          : "bg-gradient-to-b from-white to-gray-100 text-gray-800"
+      }`}
       id="projects"
     >
       <motion.h2
@@ -46,7 +52,9 @@ const ProjectsSection: React.FC = () => {
         My Projects
       </motion.h2>
       <motion.p
-        className="text-center text-gray-400 max-w-2xl mx-auto mb-16 leading-relaxed"
+        className={`text-center max-w-2xl mx-auto mb-16 leading-relaxed ${
+          theme === "dark" ? "text-gray-400" : "text-gray-600"
+        }`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -72,7 +80,9 @@ const ProjectsSection: React.FC = () => {
         {projects.map((project, index) => (
           <SwiperSlide key={index}>
             <motion.div
-              className="relative bg-gray-800 rounded-xl overflow-hidden shadow-lg"
+              className={`relative rounded-xl overflow-hidden shadow-lg ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
               whileHover={{ scale: 1.05 }}
             >
               <img
@@ -82,7 +92,11 @@ const ProjectsSection: React.FC = () => {
               />
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2">{project.title}</h3>
-                <p className="text-gray-300 text-sm mb-4">
+                <p
+                  className={`text-sm mb-4 ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   {project.description}
                 </p>
                 <button
@@ -108,7 +122,11 @@ const ProjectsSection: React.FC = () => {
             transition={{ duration: 0.4 }}
           >
             <motion.div
-              className="bg-white rounded-lg max-w-2xl w-full p-8 shadow-lg"
+              className={`rounded-lg max-w-2xl w-full p-8 shadow-lg ${
+                theme === "dark"
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-800"
+              }`}
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 50, opacity: 0 }}
@@ -122,7 +140,13 @@ const ProjectsSection: React.FC = () => {
                 alt={selectedProject.title}
                 className="w-full h-64 object-cover rounded-lg mb-4"
               />
-              <p className="text-gray-600 mb-4">{selectedProject.details}</p>
+              <p
+                className={`mb-4 ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                {selectedProject.details}
+              </p>
               <div className="text-sm mb-4">
                 <strong>Technologies:</strong>{" "}
                 {selectedProject.technologies.join(", ")}

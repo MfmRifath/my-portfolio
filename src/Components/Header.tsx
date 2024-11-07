@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiMenu, FiX } from "react-icons/fi";
+import { FiMenu, FiX, FiSun, FiMoon } from "react-icons/fi";
+import { useTheme } from "./ThemProvider";
+// Import ThemeProvider hook
 
 const navLinks = [
   "Home",
@@ -13,6 +15,7 @@ const navLinks = [
 
 const Header: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme(); // Use global theme and toggle
 
   const navAnimation = {
     hidden: { opacity: 0, y: -50 },
@@ -24,7 +27,7 @@ const Header: React.FC = () => {
       initial="hidden"
       animate="visible"
       variants={navAnimation}
-      className="bg-gradient-to-r from-blue-900 via-black to-gray-900 text-white p-4 sticky top-0 z-50 shadow-lg"
+      className="bg-gradient-to-r from-black via-blue-900 to-gray-900 dark:from-gray-900 dark:via-gray-800 dark:to-black text-white p-4 sticky top-0 z-50 shadow-lg"
     >
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo */}
@@ -63,10 +66,23 @@ const Header: React.FC = () => {
           >
             Log In
           </motion.button>
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="ml-4 p-2 rounded-full text-yellow-400 dark:text-gray-400 focus:outline-none"
+          >
+            {theme === "light" ? <FiMoon size={24} /> : <FiSun size={24} />}
+          </button>
         </nav>
 
         {/* Mobile Menu Toggle */}
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center space-x-4">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full text-yellow-400 dark:text-gray-400 focus:outline-none"
+          >
+            {theme === "light" ? <FiMoon size={24} /> : <FiSun size={24} />}
+          </button>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="text-white focus:outline-none"
@@ -96,20 +112,6 @@ const Header: React.FC = () => {
                 {item}
               </motion.a>
             ))}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md mx-auto"
-              onClick={() => setMenuOpen(false)}
-            >
-              Download CV
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              className="bg-gradient-to-r from-gray-700 to-gray-900 text-white font-semibold py-3 px-8 rounded-lg shadow-md mx-auto"
-              onClick={() => setMenuOpen(false)}
-            >
-              Log In
-            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
