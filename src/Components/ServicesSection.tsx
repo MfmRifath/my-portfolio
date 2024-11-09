@@ -14,7 +14,7 @@ import {
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useTheme } from "./ThemProvider";
-// Ensure the path is correct
+// Ensure this path is correct
 
 const services = [
   {
@@ -102,7 +102,7 @@ const cardVariants = {
 };
 
 const ServicesSection: React.FC = () => {
-  const { theme } = useTheme(); // Access the theme context
+  const { theme } = useTheme();
 
   return (
     <section
@@ -119,12 +119,12 @@ const ServicesSection: React.FC = () => {
           theme === "dark" ? "text-gray-400" : "text-gray-600"
         }`}
       >
-        I provide a comprehensive range of services to help businesses thrive in
-        a digital-first world.
+        I offer a range of services to help your business thrive in a
+        digital-first world.
       </p>
 
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 max-w-7xl mx-auto"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
@@ -134,16 +134,16 @@ const ServicesSection: React.FC = () => {
           <motion.div
             key={index}
             variants={cardVariants}
-            className={`relative group rounded-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 shadow-lg ${
+            className={`relative group rounded-xl overflow-hidden transform transition-transform duration-300 hover:scale-105 shadow-xl ${
               theme === "dark" ? "bg-gray-800" : "bg-white"
             }`}
           >
             {/* Front Card */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
               <div
                 className={`text-6xl ${service.color} mb-4 group-hover:opacity-80`}
               >
-                <service.icon />
+                {React.createElement(service.icon)}
               </div>
               <h3
                 className={`text-xl font-bold ${
@@ -156,7 +156,7 @@ const ServicesSection: React.FC = () => {
 
             {/* Back Card */}
             <motion.div
-              className={`absolute inset-0 text-center p-6 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+              className={`absolute inset-0 flex flex-col items-center justify-center p-8 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
                 theme === "dark"
                   ? "bg-gray-700 text-white"
                   : "bg-blue-50 text-gray-700"
