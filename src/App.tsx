@@ -1,59 +1,24 @@
-import React from "react";
-import { motion, useAnimation } from "framer-motion";
-import { useInView } from "react-intersection-observer";
+import { Route, Routes, useLocation } from "react-router-dom";
+import { ThemeProvider } from "./Components/ThemProvider";
 import Header from "./Components/Header";
 import HeroSection from "./Components/HeroSection";
-import ContactForm from "./Components/ContactForm";
-import ProjectsSection from "./Components/ProjectsSection";
-import ServicesSection from "./Components/ServicesSection";
-import SkillsSection from "./Components/SkillsSection";
-import ProjectIdeaSection from "./Components/ProjectIdeaSection";
-import Footer from "./Components/Footer";
 import EducationExperience from "./Components/AboutSection";
+import SkillsSection from "./Components/SkillsSection";
+import ServicesSection from "./Components/ServicesSection";
+import ProjectsSection from "./Components/ProjectsSection";
 import CertificationsSection from "./Components/Cretificates";
-import { ThemeProvider } from "./Components/ThemProvider";
-
-const SectionWrapper: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const controls = useAnimation();
-  const { ref, inView } = useInView({ triggerOnce: false, threshold: 0.1 });
-
-  React.useEffect(() => {
-    if (inView) {
-      controls.start("visible");
-    } else {
-      controls.start("hidden");
-    }
-  }, [controls, inView]);
-
-  const variants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8, ease: "easeOut" },
-    },
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      initial="hidden"
-      animate={controls}
-      variants={variants}
-      className="section-wrapper"
-    >
-      {children}
-    </motion.div>
-  );
-};
+import ProjectIdeaSection from "./Components/ProjectIdeaSection";
+import ContactForm from "./Components/ContactForm";
+import Login from "./Components/Login";
+import Footer from "./Components/Footer";
 
 const App: React.FC = () => {
+  const location = useLocation();
+  const isLoginRoute = location.pathname === "/login";
+
   return (
     <ThemeProvider>
       <div className="App bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900 dark:from-black dark:to-gray-900">
-        {/* Adding smooth scrolling */}
         <style>
           {`
             html {
@@ -61,37 +26,47 @@ const App: React.FC = () => {
             }
           `}
         </style>
-        {/* Header */}
-        <Header />
 
-        {/* Sections */}
+        {!isLoginRoute && <Header />}
+
         <main>
-          <HeroSection />
-          <SectionWrapper>
-            <EducationExperience />
-          </SectionWrapper>
-          <SectionWrapper>
-            <SkillsSection />
-          </SectionWrapper>
-          <SectionWrapper>
-            <ServicesSection />
-          </SectionWrapper>
-          <SectionWrapper>
-            <ProjectsSection />
-          </SectionWrapper>
-          <SectionWrapper>
-            <CertificationsSection />
-          </SectionWrapper>
-          <SectionWrapper>
-            <ProjectIdeaSection />
-          </SectionWrapper>
-          <SectionWrapper>
-            <ContactForm />
-          </SectionWrapper>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <div>
+                  <section id="hero">
+                    <HeroSection />
+                  </section>
+                  <section id="about">
+                    <EducationExperience />
+                  </section>
+                  <section id="skills">
+                    <SkillsSection />
+                  </section>
+                  <section id="services">
+                    <ServicesSection />
+                  </section>
+                  <section id="projects">
+                    <ProjectsSection />
+                  </section>
+                  <section id="certifications">
+                    <CertificationsSection />
+                  </section>
+                  <section id="ideas">
+                    <ProjectIdeaSection />
+                  </section>
+                  <section id="contact">
+                    <ContactForm />
+                  </section>
+                </div>
+              }
+            />
+            <Route path="/login" element={<Login />} />
+          </Routes>
         </main>
 
-        {/* Footer */}
-        <Footer />
+        {!isLoginRoute && <Footer />}
       </div>
     </ThemeProvider>
   );
