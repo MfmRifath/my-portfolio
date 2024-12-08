@@ -2,25 +2,13 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { db } from "../firebase"; // Import your Firebase configuration
 import { collection, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useTheme } from "./ThemProvider";
-
 
 const ContactMessages: React.FC = () => {
   const [messages, setMessages] = useState<
     { id: string; name: string; email: string; location: string; budget: string; message: string }[]
   >([]);
-  const [selectedMessage, setSelectedMessage] = useState<
-    | {
-        id: string;
-        name: string;
-        email: string;
-        location: string;
-        budget: string;
-        message: string;
-      }
-    | null
-  >(null);
-
   const [formData, setFormData] = useState<{
     name: string;
     email: string;
@@ -35,7 +23,20 @@ const ContactMessages: React.FC = () => {
     message: "",
   });
 
-  const { theme, toggleTheme } = useTheme(); // Use theme and toggleTheme from context
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track authentication state
+  const { theme } = useTheme(); // Use theme from context
+
+  // Initialize Firebase Auth
+  const auth = getAuth();
+
+  useEffect(() => {
+    // Monitor authentication state
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user); // Set isLoggedIn to true if a user is logged in
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
 
   // Fetch messages from Firestore
   const fetchMessages = async () => {
@@ -56,8 +57,10 @@ const ContactMessages: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchMessages();
-  }, []);
+    if (isLoggedIn) {
+      fetchMessages(); // Fetch messages only if logged in
+    }
+  }, [isLoggedIn]);
 
   // Submit the form and save to Firestore
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -71,7 +74,9 @@ const ContactMessages: React.FC = () => {
         budget: "",
         message: "",
       });
-      fetchMessages(); // Refresh the list after adding a new message
+      if (isLoggedIn) {
+        fetchMessages(); // Refresh the list after adding a new message
+      }
     } catch (err) {
       console.error("Error submitting form:", err);
     }
@@ -93,7 +98,6 @@ const ContactMessages: React.FC = () => {
         theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
       }`}
     >
-
       {/* Form Section */}
       <motion.div
         className={`p-8 rounded-lg shadow-lg mb-10 max-w-lg mx-auto ${
@@ -194,33 +198,35 @@ const ContactMessages: React.FC = () => {
       </motion.div>
 
       {/* Messages List */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, staggerChildren: 0.2 }}
-      >
-        {messages.map((msg) => (
-          <motion.div
-            key={msg.id}
-            className={`p-6 rounded-lg shadow-lg relative ${
-              theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-            }`}
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.3 }}
-          >
-            <h3 className="text-lg font-bold">{msg.name}</h3>
-            <p className="text-sm">{msg.email}</p>
-            <p className="text-sm truncate">{msg.message}</p>
-            <button
-              onClick={() => handleDeleteMessage(msg.id)}
-              className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+      {isLoggedIn && (
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, staggerChildren: 0.2 }}
+        >
+          {messages.map((msg) => (
+            <motion.div
+              key={msg.id}
+              className={`p-6 rounded-lg shadow-lg relative ${
+                theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+              }`}
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
             >
-              Delete
-            </button>
-          </motion.div>
-        ))}
-      </motion.div>
+              <h3 className="text-lg font-bold">{msg.name}</h3>
+              <p className="text-sm">{msg.email}</p>
+              <p className="text-sm truncate">{msg.message}</p>
+              <button
+                onClick={() => handleDeleteMessage(msg.id)}
+                className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+              >
+                Delete
+              </button>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
     </div>
   );
 };

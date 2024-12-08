@@ -14,6 +14,7 @@ import {
   FaBusinessTime,
 } from "react-icons/fa";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { onAuthStateChanged, getAuth, User } from "firebase/auth";
 import { useTheme } from "./ThemProvider"; // Adjust the path to your ThemeProvider
 import { db } from "../firebase";
 
@@ -52,6 +53,17 @@ const ServicesSection: React.FC = () => {
     icon: "FaPaintBrush",
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [user, setUser] = useState<User | null>(null); // Track the logged-in user
+
+  const auth = getAuth(); // Firebase Auth
+
+  // Check user authentication state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe(); // Cleanup subscription
+  }, []);
 
   // Fetch services from Firestore
   const fetchServices = async () => {
@@ -156,23 +168,25 @@ const ServicesSection: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">{service.title}</h3>
               <p className="text-sm mb-4">{service.description}</p>
-              <div className="flex justify-between">
-                <button
-                  className="text-blue-500 hover:text-blue-700"
-                  onClick={() => {
-                    setFormData(service);
-                    setIsEditing(true);
-                  }}
-                >
-                  Edit
-                </button>
-                <button
-                  className="text-red-500 hover:text-red-700"
-                  onClick={() => handleDelete(service.id)}
-                >
-                  Delete
-                </button>
-              </div>
+              {user && ( // Show Edit/Delete buttons only if user is logged in
+                <div className="flex justify-between">
+                  <button
+                    className="text-blue-500 hover:text-blue-700"
+                    onClick={() => {
+                      setFormData(service);
+                      setIsEditing(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="text-red-500 hover:text-red-700"
+                    onClick={() => handleDelete(service.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </motion.div>
           ))
         ) : (
@@ -183,13 +197,15 @@ const ServicesSection: React.FC = () => {
       </div>
 
       {/* Add New Service Button */}
-      <motion.button
-        className="mt-12 block mx-auto bg-gradient-to-r from-blue-500 to-blue-700 text-white px-8 py-3 rounded-lg shadow-md hover:from-blue-600 hover:to-blue-800 transition-all transform hover:scale-105"
-        whileHover={{ scale: 1.1 }}
-        onClick={() => setIsEditing(true)}
-      >
-        Add New Service
-      </motion.button>
+      {user && ( // Show Add button only if user is logged in
+        <motion.button
+          className="mt-12 block mx-auto bg-gradient-to-r from-blue-500 to-blue-700 text-white px-8 py-3 rounded-lg shadow-md hover:from-blue-600 hover:to-blue-800 transition-all transform hover:scale-105"
+          whileHover={{ scale: 1.1 }}
+          onClick={() => setIsEditing(true)}
+        >
+          Add New Service
+        </motion.button>
+      )}
 
       {/* Modal for Add/Edit */}
       {isEditing && (

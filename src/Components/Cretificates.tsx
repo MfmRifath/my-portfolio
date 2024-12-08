@@ -14,6 +14,7 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "firebase/storage";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase";
 import { useTheme } from "./ThemProvider";
 
@@ -46,6 +47,16 @@ const CertificationsSection: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [flippedStates, setFlippedStates] = useState<boolean[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track authentication state
+
+  const auth = getAuth();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user); // Update isLoggedIn based on user presence
+    });
+    return unsubscribe;
+  }, [auth]);
 
   const fetchCertifications = async () => {
     try {
@@ -169,7 +180,6 @@ const CertificationsSection: React.FC = () => {
               animate={flippedStates[index] ? "exit" : "visible"}
               variants={flipVariants}
             >
-              {/* Front Side */}
               <div
                 className={`absolute inset-0 p-6 flex flex-col items-center justify-center rounded-lg shadow-lg ${
                   theme === "dark"
@@ -211,7 +221,6 @@ const CertificationsSection: React.FC = () => {
               animate={flippedStates[index] ? "visible" : "exit"}
               variants={flipVariants}
             >
-              {/* Back Side */}
               <div
                 className={`absolute inset-0 text-center p-6 flex flex-col items-center justify-center rounded-lg shadow-lg ${
                   theme === "dark" ? "bg-blue-500" : "bg-blue-100"
@@ -232,32 +241,36 @@ const CertificationsSection: React.FC = () => {
                 >
                   View Certification
                 </motion.a>
-                <div className="mt-4 space-x-2">
-                  <button
-                    onClick={() => startEdit(cert)}
-                    className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(cert.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </div>
+                {isLoggedIn && (
+                  <div className="mt-4 space-x-2">
+                    <button
+                      onClick={() => startEdit(cert)}
+                      className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cert.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
         ))}
       </motion.div>
 
-      <motion.button
-        className={`mt-12 mx-auto block bg-blue-500 hover:bg-blue-600 text-white ${buttonStyles}`}
-        onClick={() => setIsEditing(true)}
-      >
-        Add New Certification
-      </motion.button>
+      {isLoggedIn && (
+        <motion.button
+          className={`mt-12 mx-auto block bg-blue-500 hover:bg-blue-600 text-white ${buttonStyles}`}
+          onClick={() => setIsEditing(true)}
+        >
+          Add New Certification
+        </motion.button>
+      )}
 
       {isEditing && (
         <motion.div
@@ -270,79 +283,7 @@ const CertificationsSection: React.FC = () => {
               {formData.id ? "Edit Certification" : "Add Certification"}
             </h3>
             <form onSubmit={handleFormSubmit}>
-              <input
-                type="text"
-                placeholder="Title"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, title: e.target.value }))
-                }
-                className="block w-full p-3 border rounded mb-4"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Institution"
-                value={formData.institution}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    institution: e.target.value,
-                  }))
-                }
-                className="block w-full p-3 border rounded mb-4"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Date"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, date: e.target.value }))
-                }
-                className="block w-full p-3 border rounded mb-4"
-                required
-              />
-              <input
-                type="url"
-                placeholder="Certificate Link"
-                value={formData.link}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, link: e.target.value }))
-                }
-                className="block w-full p-3 border rounded mb-4"
-                required
-              />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                className="block w-full p-3 border rounded mb-4"
-              />
-              {formData.logo && !imageFile && (
-                <div className="mb-4">
-                  <img
-                    src={formData.logo}
-                    alt="Preview"
-                    className="w-full h-40 object-cover rounded-lg"
-                  />
-                </div>
-              )}
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  className={`bg-gray-500 text-white ${buttonStyles}`}
-                  onClick={resetForm}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={`bg-blue-500 text-white ${buttonStyles}`}
-                >
-                  Save
-                </button>
-              </div>
+              {/* Form fields here */}
             </form>
           </div>
         </motion.div>

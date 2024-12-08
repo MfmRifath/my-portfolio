@@ -8,6 +8,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import { onAuthStateChanged, getAuth, User } from "firebase/auth"; // Import Firebase Auth and User type
 import { useTheme } from "./ThemProvider";
 import {
   FaReact,
@@ -71,6 +72,17 @@ const SkillsSection: React.FC = () => {
     level: 0,
     icon: "SiJavascript",
   });
+  const [user, setUser] = useState<User | null>(null); // Track logged-in user
+
+  const auth = getAuth(); // Firebase Auth
+
+  // Check for logged-in user
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe(); // Cleanup subscription
+  }, []);
 
   // Fetch skills from Firestore
   const fetchSkills = async () => {
@@ -203,36 +215,40 @@ const SkillsSection: React.FC = () => {
             </div>
 
             {/* Edit/Delete Buttons */}
-            <div className="absolute top-2 right-2 flex space-x-2">
-              <button
-                className="text-blue-500"
-                onClick={() => {
-                  setFormData(skill);
-                  setIsEditing(true);
-                }}
-              >
-                Edit
-              </button>
-              <button
-                className="text-red-500"
-                onClick={() => handleDelete(skill.id)}
-              >
-                Delete
-              </button>
-            </div>
+            {user && (
+              <div className="absolute top-2 right-2 flex space-x-2">
+                <button
+                  className="text-blue-500"
+                  onClick={() => {
+                    setFormData(skill);
+                    setIsEditing(true);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="text-red-500"
+                  onClick={() => handleDelete(skill.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </motion.div>
         ))}
       </motion.div>
 
       {/* Add Skill Button */}
-      <motion.button
-        className="mt-10 block mx-auto bg-blue-500 text-white px-6 py-2 rounded-lg shadow-md transform hover:scale-105 transition-transform"
-        onClick={() => setIsEditing(true)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        Add Skill
-      </motion.button>
+      {user && (
+        <motion.button
+          className="mt-10 block mx-auto bg-blue-500 text-white px-6 py-2 rounded-lg shadow-md transform hover:scale-105 transition-transform"
+          onClick={() => setIsEditing(true)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          Add Skill
+        </motion.button>
+      )}
 
       {/* Add/Edit Skill Modal */}
       {isEditing && (

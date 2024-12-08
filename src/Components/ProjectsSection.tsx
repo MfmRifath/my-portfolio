@@ -14,6 +14,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { onAuthStateChanged, getAuth, User } from "firebase/auth"; // Firebase Authentication
 import { db } from "../firebase";
 import { useTheme } from "./ThemProvider";
 
@@ -43,6 +44,17 @@ const ProjectsSection: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null); // Track logged-in user
+
+  const auth = getAuth();
+
+  // Check user authentication state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const fetchProjects = async () => {
     try {
@@ -187,26 +199,27 @@ const ProjectsSection: React.FC = () => {
                 >
                   {project.description}
                 </p>
-                <div className="flex space-x-4">
-                  <button
-                    onClick={() => setSelectedProject(project)}
-                    className={`bg-blue-500 hover:bg-blue-600 text-white ${buttonStyles}`}
-                  >
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => startEdit(project)}
-                    className={`bg-yellow-500 hover:bg-yellow-600 text-white ${buttonStyles}`}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setConfirmDelete(project.id)}
-                    className={`bg-red-500 hover:bg-red-600 text-white ${buttonStyles}`}
-                  >
-                    Delete
-                  </button>
-                </div>
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={() => setSelectedProject(project)}
+                      className={`bg-blue-500 hover:bg-blue-600 text-white ${buttonStyles}`}
+                    >
+                      View Details
+                    </button>
+                  {user && ( 
+                    <><button
+                      onClick={() => startEdit(project)}
+                      className={`bg-yellow-500 hover:bg-yellow-600 text-white ${buttonStyles}`}
+                    >
+                      Edit
+                    </button><button
+                      onClick={() => setConfirmDelete(project.id)}
+                      className={`bg-red-500 hover:bg-red-600 text-white ${buttonStyles}`}
+                    >
+                        Delete
+                      </button></>)}
+                  </div>
+                
                 <a
                   href={project.link}
                   target="_blank"
@@ -221,12 +234,14 @@ const ProjectsSection: React.FC = () => {
         ))}
       </Swiper>
 
-      <motion.button
-        className={`mt-12 mx-auto block bg-blue-500 hover:bg-blue-600 text-white ${buttonStyles}`}
-        onClick={() => setIsEditing(true)}
-      >
-        Add New Project
-      </motion.button>
+      {user && ( // Conditionally show Add button if user is logged in
+        <motion.button
+          className={`mt-12 mx-auto block bg-blue-500 hover:bg-blue-600 text-white ${buttonStyles}`}
+          onClick={() => setIsEditing(true)}
+        >
+          Add New Project
+        </motion.button>
+      )}
 
       <AnimatePresence>
         {selectedProject && (

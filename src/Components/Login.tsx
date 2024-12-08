@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { auth } from "../firebase";
 
 const Login = () => {
@@ -9,6 +10,8 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(true);
+
+  const navigate = useNavigate(); // Initialize navigate
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
@@ -26,6 +29,7 @@ const Login = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert("Login successful!");
+      navigate("/"); // Redirect to /dashboard after successful login
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

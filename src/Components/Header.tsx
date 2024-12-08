@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiMenu, FiX, FiSun, FiMoon } from "react-icons/fi";
 import { useTheme } from "./ThemProvider";
 import { Link as ScrollLink } from "react-scroll";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
 const navLinks = [
   { name: "Home", to: "hero" },
@@ -17,6 +18,28 @@ const navLinks = [
 const Header: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const auth = getAuth();
+
+  // Monitor authentication state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user); // Update login state
+    });
+    return () => unsubscribe();
+  }, [auth]);
+
+  // Handle Logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setIsLoggedIn(false);
+      alert("Successfully logged out.");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
 
   return (
     <header className="bg-gradient-to-r from-gray-900 via-gray-800 to-black text-white shadow-lg sticky top-0 z-50">
@@ -42,15 +65,24 @@ const Header: React.FC = () => {
               <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-blue-500 transition-all duration-300 hover:w-full"></span>
             </ScrollLink>
           ))}
-          {/* Login Button */}
+          {/* Conditional Authentication Button */}
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="bg-gradient-to-r from-red-500 to-red-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            >
+              Log Out
+            </button>
+          ) : (
+            <a
+              href="/login"
+              className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            >
+              Log In
+            </a>
+          )}
+          {/* Download CV Button */}
           <a
-            href="/login"
-            className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-          >
-            Log In
-          </a>
-           {/* Download CV Button */}
-           <a
             href="/path-to-your-cv.pdf"
             download
             className="ml-4 bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
@@ -65,7 +97,6 @@ const Header: React.FC = () => {
           >
             {theme === "light" ? <FiMoon size={24} /> : <FiSun size={24} />}
           </button>
-         
         </nav>
 
         {/* Mobile Menu Toggle */}
@@ -92,18 +123,27 @@ const Header: React.FC = () => {
               {link.name}
             </ScrollLink>
           ))}
-          {/* Login Button */}
-          <a
-            href="/login"
-            className="block text-center bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-          >
-            Log In
-          </a>
+          {/* Conditional Authentication Button */}
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="block w-full text-center bg-gradient-to-r from-red-500 to-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            >
+              Log Out
+            </button>
+          ) : (
+            <a
+              href="/login"
+              className="block w-full text-center bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            >
+              Log In
+            </a>
+          )}
           {/* Download CV Button */}
           <a
             href="/path-to-your-cv.pdf"
             download
-            className="block text-center bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            className="block w-full text-center bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
           >
             Download CV
           </a>
