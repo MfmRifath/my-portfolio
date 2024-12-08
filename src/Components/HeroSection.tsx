@@ -50,7 +50,7 @@ const HeroSection: React.FC = () => {
 
   return (
     <section
-      className={`relative p-10 md:p-20 flex flex-col md:flex-row items-center justify-between gap-16 ${
+      className={`relative min-h-screen flex flex-col md:flex-row items-center justify-between px-10 md:px-20 gap-16 ${
         theme === "dark" ? "text-white" : "text-gray-900"
       }`}
       id="home"
@@ -58,7 +58,7 @@ const HeroSection: React.FC = () => {
     >
       {/* Dynamic Background */}
       <div
-        className={`absolute inset-0 bg-cover bg-fixed bg-center opacity-40 blur-md ${
+        className={`absolute inset-0 bg-cover bg-fixed bg-center opacity-50 ${
           theme === "dark"
             ? "bg-gradient-to-br from-black via-gray-900 to-blue-900"
             : "bg-gradient-to-br from-gray-100 via-gray-200 to-blue-50"

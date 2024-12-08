@@ -1,5 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { useTheme } from "./ThemProvider";
 import {
   FaReact,
   FaNodeJs,
@@ -18,121 +27,116 @@ import {
   SiKotlin,
   SiSwift,
   SiCplusplus,
-  SiDevpost,
   SiSpringboot,
-  SiMongodb,
+  SiOpenai,
+  SiDjango,
 } from "react-icons/si";
-import { useTheme } from "./ThemProvider";
-// Import your ThemeProvider hook
+import { db } from "../firebase";
 
-const skills = [
-  {
-    name: "JavaScript",
-    level: 90,
-    icon: <SiJavascript size={48} className="text-yellow-500" />,
-  },
-  {
-    name: "React",
-    level: 85,
-    icon: <FaReact size={48} className="text-blue-400" />,
-  },
-  {
-    name: "TypeScript",
-    level: 80,
-    icon: <SiTypescript size={48} className="text-blue-600" />,
-  },
-  {
-    name: "Node.js",
-    level: 75,
-    icon: <FaNodeJs size={48} className="text-green-500" />,
-  },
-  {
-    name: "Flutter",
-    level: 70,
-    icon: <SiFlutter size={48} className="text-blue-500" />,
-  },
-  {
-    name: "Python",
-    level: 65,
-    icon: <FaPython size={48} className="text-blue-300" />,
-  },
-  {
-    name: "Machine Learning",
-    level: 60,
-    icon: <SiTensorflow size={48} className="text-green-400" />,
-  },
-  {
-    name: "Database Management",
-    level: 85,
-    icon: <FaDatabase size={48} className="text-purple-500" />,
-  },
-  {
-    name: "Spring Boot",
-    level: 80,
-    icon: <SiSpringboot size={48} className="text-green-600" />,
-  },
-  {
-    name: "MERN Stack",
-    level: 85,
-    icon: <FaReact size={48} className="text-blue-400" />,
-  },
-  {
-    name: "Angular",
-    level: 75,
-    icon: <SiAngular size={48} className="text-red-500" />,
-  },
-  {
-    name: "Vue.js",
-    level: 70,
-    icon: <SiVuedotjs size={48} className="text-green-400" />,
-  },
-  {
-    name: "Java",
-    level: 80,
-    icon: <FaJava size={48} className="text-red-600" />,
-  },
-  {
-    name: "Kotlin",
-    level: 65,
-    icon: <SiKotlin size={48} className="text-purple-400" />,
-  },
-  {
-    name: "Swift",
-    level: 70,
-    icon: <SiSwift size={48} className="text-orange-500" />,
-  },
-  {
-    name: "C++",
-    level: 75,
-    icon: <SiCplusplus size={48} className="text-blue-500" />,
-  },
-  {
-    name: "DevOps",
-    level: 60,
-    icon: <SiDevpost size={48} className="text-gray-400" />,
-  },
-  {
-    name: "Docker",
-    level: 70,
-    icon: <FaDocker size={48} className="text-blue-400" />,
-  },
+// Icon options for dropdown
+const iconOptions = [
+  { label: "JavaScript", value: "SiJavascript", icon: <SiJavascript /> },
+  { label: "React", value: "FaReact", icon: <FaReact /> },
+  { label: "TypeScript", value: "SiTypescript", icon: <SiTypescript /> },
+  { label: "Node.js", value: "FaNodeJs", icon: <FaNodeJs /> },
+  { label: "Flutter", value: "SiFlutter", icon: <SiFlutter /> },
+  { label: "Python", value: "FaPython", icon: <FaPython /> },
+  { label: "Django", value: "SiDjango", icon: <SiDjango /> },
+  { label: "Database", value: "FaDatabase", icon: <FaDatabase /> },
+  { label: "Spring Boot", value: "SiSpringboot", icon: <SiSpringboot /> },
+  { label: "Docker", value: "FaDocker", icon: <FaDocker /> },
+  { label: "Angular", value: "SiAngular", icon: <SiAngular /> },
+  { label: "Vue.js", value: "SiVuedotjs", icon: <SiVuedotjs /> },
+  { label: "Kotlin", value: "SiKotlin", icon: <SiKotlin /> },
+  { label: "Swift", value: "SiSwift", icon: <SiSwift /> },
+  { label: "C++", value: "SiCplusplus", icon: <SiCplusplus /> },
+  { label: "LLM", value: "SiOpenai", icon: <SiOpenai /> },
 ];
 
+interface Skill {
+  id: string;
+  name: string;
+  level: number;
+  icon: string;
+}
+
 const SkillsSection: React.FC = () => {
-  const { theme } = useTheme(); // Get current theme
+  const { theme } = useTheme();
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<Skill>({
+    id: "",
+    name: "",
+    level: 0,
+    icon: "SiJavascript",
+  });
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 0.2 },
-    },
+  // Fetch skills from Firestore
+  const fetchSkills = async () => {
+    setLoading(true);
+    try {
+      const skillsSnapshot = await getDocs(collection(db, "skills"));
+      setSkills(
+        skillsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Skill[]
+      );
+    } catch (error) {
+      console.error("Error fetching skills:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const circleVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.6 } },
+  useEffect(() => {
+    fetchSkills();
+  }, []);
+
+  // Add or update skill
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { id, name, level, icon } = formData;
+
+    try {
+      if (id) {
+        const docRef = doc(db, "skills", id);
+        await updateDoc(docRef, { name, level, icon });
+      } else {
+        await addDoc(collection(db, "skills"), { name, level, icon });
+      }
+      fetchSkills();
+      setFormData({ id: "", name: "", level: 0, icon: "SiJavascript" });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving skill:", error);
+    }
   };
+
+  // Delete skill
+  const handleDelete = async (id: string) => {
+    try {
+      const docRef = doc(db, "skills", id);
+      await deleteDoc(docRef);
+      fetchSkills();
+    } catch (error) {
+      console.error("Error deleting skill:", error);
+    }
+  };
+
+  const getIconComponent = (iconName: string) => {
+    const icon = iconOptions.find((opt) => opt.value === iconName);
+    return icon ? icon.icon : null;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <section
@@ -145,71 +149,156 @@ const SkillsSection: React.FC = () => {
     >
       <h2 className="text-5xl font-extrabold text-center mb-12">My Skills</h2>
       <p className="text-center max-w-3xl mx-auto mb-16 leading-relaxed">
-        Through dedicated learning and hands-on projects, I’ve cultivated a
-        robust skill set across diverse technologies and disciplines.
+        Manage your skills dynamically with real-time updates.
       </p>
 
+      {/* Skills List */}
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-12 max-w-6xl mx-auto"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
-        variants={containerVariants}
+        transition={{ staggerChildren: 0.2 }}
       >
-        {skills.map((skill, index) => (
+        {skills.map((skill) => (
           <motion.div
-            key={index}
-            className={`relative group text-center ${
+            key={skill.id}
+            className={`relative overflow-hidden shadow-lg rounded-lg p-6 text-center ${
               theme === "dark" ? "bg-gray-800" : "bg-white"
-            } shadow-lg rounded-lg p-6 transform hover:scale-105 transition-transform`}
-            variants={circleVariants}
+            } group transform hover:scale-105 transition-transform`}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <div className="w-24 h-24 mx-auto relative">
+            {/* Icon */}
+            <div className="relative z-10 flex justify-center items-center mb-6">
+              <div
+                className={`w-24 h-24 flex items-center justify-center rounded-full ${
+                  theme === "dark"
+                    ? "bg-gradient-to-r from-blue-500 to-purple-500"
+                    : "bg-gradient-to-r from-blue-400 to-teal-400"
+                }`}
+              >
+                <div className="text-5xl">{getIconComponent(skill.icon)}</div>
+              </div>
+            </div>
+
+            {/* Text */}
+            <h3 className="text-lg font-bold mb-2">{skill.name}</h3>
+            <p className="text-sm mb-4">{skill.level}% Proficiency</p>
+
+            {/* Progress Bar */}
+            <div className="w-full h-2 bg-gray-300 rounded-full overflow-hidden relative">
               <motion.div
-                className="absolute inset-0 flex items-center justify-center rounded-full border-8"
-                style={{
-                  borderColor: `conic-gradient(
-                    from 0deg, 
-                    ${theme === "dark" ? "#3b82f6" : "#2563eb"} ${
-                    skill.level
-                  }%, 
-                    ${theme === "dark" ? "#374151" : "#d1d5db"} ${
-                    skill.level
-                  }%)`,
+                className={`h-full ${
+                  theme === "dark"
+                    ? "bg-gradient-to-r from-blue-500 to-purple-500"
+                    : "bg-gradient-to-r from-blue-400 to-teal-400"
+                }`}
+                style={{ width: `${skill.level}%` }}
+                initial={{ width: 0 }}
+                animate={{ width: `${skill.level}%` }}
+                transition={{ duration: 1, ease: "easeInOut" }}
+              ></motion.div>
+            </div>
+
+            {/* Edit/Delete Buttons */}
+            <div className="absolute top-2 right-2 flex space-x-2">
+              <button
+                className="text-blue-500"
+                onClick={() => {
+                  setFormData(skill);
+                  setIsEditing(true);
                 }}
               >
-                <div
-                  className={`text-2xl font-bold ${
-                    theme === "dark" ? "text-blue-400" : "text-blue-600"
-                  }`}
-                >
-                  {skill.level}%
-                </div>
-              </motion.div>
-            </div>
-            <div className="mt-4 flex flex-col items-center">
-              {skill.icon}
-              <h3 className="mt-2 text-lg font-semibold">{skill.name}</h3>
+                Edit
+              </button>
+              <button
+                className="text-red-500"
+                onClick={() => handleDelete(skill.id)}
+              >
+                Delete
+              </button>
             </div>
           </motion.div>
         ))}
       </motion.div>
 
-      {/* Call to Action */}
-      <div className="text-center mt-16">
-        <motion.a
-          href="#projects"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          className={`py-3 px-8 font-semibold rounded-lg shadow-lg transition-all transform ${
-            theme === "dark"
-              ? "bg-blue-500 hover:bg-blue-600 text-white"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
-          }`}
+      {/* Add Skill Button */}
+      <motion.button
+        className="mt-10 block mx-auto bg-blue-500 text-white px-6 py-2 rounded-lg shadow-md transform hover:scale-105 transition-transform"
+        onClick={() => setIsEditing(true)}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        Add Skill
+      </motion.button>
+
+      {/* Add/Edit Skill Modal */}
+      {isEditing && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
         >
-          View My Projects
-        </motion.a>
-      </div>
+          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">
+              {formData.id ? "Edit Skill" : "Add Skill"}
+            </h3>
+            <form onSubmit={handleFormSubmit}>
+              <input
+                type="text"
+                placeholder="Skill Name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="block w-full p-2 border rounded mb-4"
+                required
+              />
+              <input
+                type="number"
+                placeholder="Skill Level (0-100)"
+                value={formData.level}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, level: +e.target.value }))
+                }
+                className="block w-full p-2 border rounded mb-4"
+                required
+              />
+              <select
+                value={formData.icon}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, icon: e.target.value }))
+                }
+                className="block w-full p-2 border rounded mb-4"
+              >
+                {iconOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                className="bg-gray-500 text-white px-4 py-2 rounded ml-2"
+                onClick={() => {
+                  setFormData({ id: "", name: "", level: 0, icon: "SiJavascript" });
+                  setIsEditing(false);
+                }}
+              >
+                Cancel
+              </button>
+            </form>
+          </div>
+        </motion.div>
+      )}
     </section>
   );
 };

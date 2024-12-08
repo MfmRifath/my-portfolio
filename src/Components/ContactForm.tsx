@@ -1,8 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { db } from "../firebase"; // Import your Firebase configuration
+import { collection, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { useTheme } from "./ThemProvider";
 
-const ContactForm: React.FC = () => {
+
+const ContactMessages: React.FC = () => {
+  const [messages, setMessages] = useState<
+    { id: string; name: string; email: string; location: string; budget: string; message: string }[]
+  >([]);
+  const [selectedMessage, setSelectedMessage] = useState<
+    | {
+        id: string;
+        name: string;
+        email: string;
+        location: string;
+        budget: string;
+        message: string;
+      }
+    | null
+  >(null);
+
   const [formData, setFormData] = useState<{
     name: string;
     email: string;
@@ -17,126 +35,194 @@ const ContactForm: React.FC = () => {
     message: "",
   });
 
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  const { theme } = useTheme(); // Access theme
+  const { theme, toggleTheme } = useTheme(); // Use theme and toggleTheme from context
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // Fetch messages from Firestore
+  const fetchMessages = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "contacts"));
+      const fetchedMessages = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        name: doc.data().name || "N/A",
+        email: doc.data().email || "N/A",
+        location: doc.data().location || "N/A",
+        budget: doc.data().budget || "N/A",
+        message: doc.data().message || "No message provided",
+      }));
+      setMessages(fetchedMessages);
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    fetchMessages();
+  }, []);
+
+  // Submit the form and save to Firestore
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setFormSubmitted(true);
-    setTimeout(() => setFormSubmitted(false), 3000); // Reset after 3 seconds
+    try {
+      await addDoc(collection(db, "contacts"), formData);
+      setFormData({
+        name: "",
+        email: "",
+        location: "",
+        budget: "",
+        message: "",
+      });
+      fetchMessages(); // Refresh the list after adding a new message
+    } catch (err) {
+      console.error("Error submitting form:", err);
+    }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-  };
-
-  const buttonVariants = {
-    hover: { scale: 1.1 },
-    tap: { scale: 0.95 },
+  // Delete a message from Firestore
+  const handleDeleteMessage = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "contacts", id));
+      setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== id)); // Remove message from state
+    } catch (err) {
+      console.error("Error deleting message:", err);
+    }
   };
 
   return (
-    <section
-      className={`relative p-12 min-h-screen flex items-center justify-center ${
-        theme === "dark"
-          ? "bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 text-white"
-          : "bg-gradient-to-r from-blue-800 via-blue-500 to-blue-300 text-gray-900"
+    <div
+      className={`min-h-screen p-10 ${
+        theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
       }`}
-      id="contact"
     >
-      {/* Decorative Elements */}
-      <div
-        className={`absolute top-10 left-10 w-40 h-40 ${
-          theme === "dark" ? "bg-purple-500" : "bg-pink-300"
-        } rounded-full blur-3xl opacity-30`}
-      ></div>
-      <div
-        className={`absolute bottom-20 right-20 w-56 h-56 ${
-          theme === "dark" ? "bg-blue-500" : "bg-purple-300"
-        } rounded-full blur-3xl opacity-30`}
-      ></div>
 
+      {/* Form Section */}
       <motion.div
-        className="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg shadow-2xl max-w-lg w-full p-8"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
+        className={`p-8 rounded-lg shadow-lg mb-10 max-w-lg mx-auto ${
+          theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+        }`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
       >
-        <h2 className="text-3xl font-extrabold text-center mb-6">
-          Let’s Discuss Your Project
-        </h2>
-        <p className="text-center mb-8 text-gray-200">
-          Fill out the form below, and I’ll get back to you shortly.
-        </p>
-
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          {(Object.keys(formData) as Array<keyof typeof formData>).map(
-            (field, index) => (
-              <motion.div key={index} whileHover={{ scale: 1.02 }}>
-                <motion.input
-                  type={field === "message" ? "textarea" : "text"}
-                  name={field}
-                  placeholder={`${
-                    field.charAt(0).toUpperCase() + field.slice(1)
-                  } ${
-                    field === "location" || field === "budget"
-                      ? "(Optional)"
-                      : ""
-                  }`}
-                  value={formData[field]}
-                  onChange={handleChange}
-                  className={`w-full p-3 rounded-lg placeholder-gray-300 focus:outline-none ${
-                    theme === "dark"
-                      ? "bg-gray-700 text-white focus:ring-2 focus:ring-purple-500"
-                      : "bg-white text-gray-900 focus:ring-2 focus:ring-purple-300"
-                  }`}
-                />
-              </motion.div>
-            )
-          )}
+        <h3 className="text-2xl font-bold mb-4">Let’s Discuss Your Project</h3>
+        <form onSubmit={handleFormSubmit} className="space-y-4">
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData({ ...formData, name: e.target.value })
+            }
+            placeholder="Name"
+            className={`w-full p-3 rounded-lg ${
+              theme === "dark"
+                ? "bg-gray-700 text-white placeholder-gray-400"
+                : "bg-gray-100 text-gray-900"
+            }`}
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+            placeholder="Email"
+            className={`w-full p-3 rounded-lg ${
+              theme === "dark"
+                ? "bg-gray-700 text-white placeholder-gray-400"
+                : "bg-gray-100 text-gray-900"
+            }`}
+            required
+          />
+          <input
+            type="text"
+            name="location"
+            value={formData.location}
+            onChange={(e) =>
+              setFormData({ ...formData, location: e.target.value })
+            }
+            placeholder="Location (Optional)"
+            className={`w-full p-3 rounded-lg ${
+              theme === "dark"
+                ? "bg-gray-700 text-white placeholder-gray-400"
+                : "bg-gray-100 text-gray-900"
+            }`}
+          />
+          <input
+            type="text"
+            name="budget"
+            value={formData.budget}
+            onChange={(e) =>
+              setFormData({ ...formData, budget: e.target.value })
+            }
+            placeholder="Budget (Optional)"
+            className={`w-full p-3 rounded-lg ${
+              theme === "dark"
+                ? "bg-gray-700 text-white placeholder-gray-400"
+                : "bg-gray-100 text-gray-900"
+            }`}
+          />
+          <textarea
+            name="message"
+            value={formData.message}
+            onChange={(e) =>
+              setFormData({ ...formData, message: e.target.value })
+            }
+            placeholder="Message"
+            className={`w-full p-3 rounded-lg ${
+              theme === "dark"
+                ? "bg-gray-700 text-white placeholder-gray-400"
+                : "bg-gray-100 text-gray-900"
+            }`}
+            rows={5}
+            required
+          />
           <motion.button
             type="submit"
-            className={`w-full font-semibold py-3 px-6 rounded-lg shadow-lg transition-transform ${
+            className={`w-full py-3 rounded-lg font-semibold shadow-lg ${
               theme === "dark"
-                ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                : "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                ? "bg-blue-500 text-white hover:bg-blue-600"
+                : "bg-blue-500 text-white hover:bg-blue-600"
             }`}
-            variants={buttonVariants}
-            whileHover="hover"
-            whileTap="tap"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
           >
             Submit
           </motion.button>
         </form>
-
-        {formSubmitted && (
-          <motion.div
-            className="mt-6 text-center font-semibold"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <span
-              className={theme === "dark" ? "text-green-300" : "text-green-500"}
-            >
-              Thank you! Your message has been sent.
-            </span>
-          </motion.div>
-        )}
       </motion.div>
-    </section>
+
+      {/* Messages List */}
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, staggerChildren: 0.2 }}
+      >
+        {messages.map((msg) => (
+          <motion.div
+            key={msg.id}
+            className={`p-6 rounded-lg shadow-lg relative ${
+              theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+            }`}
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h3 className="text-lg font-bold">{msg.name}</h3>
+            <p className="text-sm">{msg.email}</p>
+            <p className="text-sm truncate">{msg.message}</p>
+            <button
+              onClick={() => handleDeleteMessage(msg.id)}
+              className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+            >
+              Delete
+            </button>
+          </motion.div>
+        ))}
+      </motion.div>
+    </div>
   );
 };
 
-export default ContactForm;
+export default ContactMessages;

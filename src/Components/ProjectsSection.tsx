@@ -1,38 +1,138 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { Pagination, Navigation } from "swiper/modules";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db } from "../firebase";
 import { useTheme } from "./ThemProvider";
 
-const projects = [
-  {
-    title: "E-Commerce Platform",
-    description:
-      "A fully functional e-commerce web application with payment integration.",
-    technologies: ["React", "Node.js", "MongoDB"],
-    details:
-      "This project involved creating a complete e-commerce solution with features such as product browsing, user authentication, cart management, and payment gateway integration. It also includes an admin panel for managing products and orders.",
-    link: "#",
-    image: "/Landscape_Background.jpg", // Placeholder image
-  },
-  {
-    title: "Mobile Food Delivery App",
-    description:
-      "Cross-platform mobile application for food delivery services.",
-    technologies: ["Flutter", "Firebase"],
-    details:
-      "A cross-platform food delivery app that supports real-time order tracking, push notifications, and payment options. The app was developed using Flutter and Firebase for scalability.",
-    link: "#",
-    image: "/Landscape_Background.jpg", // Placeholder image
-  },
-];
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  details: string;
+  technologies: string[];
+  link: string;
+  image: string;
+}
 
 const ProjectsSection: React.FC = () => {
-  const [selectedProject, setSelectedProject] = useState<any | null>(null);
-  const { theme } = useTheme(); // Get the current theme
+  const { theme } = useTheme();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [formData, setFormData] = useState<Project>({
+    id: "",
+    title: "",
+    description: "",
+    details: "",
+    technologies: [],
+    link: "",
+    image: "",
+  });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const fetchProjects = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "projects"));
+      const fetchedProjects: Project[] = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title || "",
+          description: data.description || "",
+          details: data.details || "",
+          technologies: data.technologies || [],
+          link: data.link || "",
+          image: data.image || "",
+        };
+      });
+      setProjects(fetchedProjects);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { id, ...data } = formData;
+
+    try {
+      let imageUrl = formData.image;
+
+      if (imageFile) {
+        const storage = getStorage();
+        const imageRef = ref(storage, `projects/${imageFile.name}`);
+        await uploadBytes(imageRef, imageFile);
+        imageUrl = await getDownloadURL(imageRef);
+      }
+
+      if (id) {
+        const docRef = doc(db, "projects", id);
+        await updateDoc(docRef, { ...data, image: imageUrl });
+      } else {
+        await addDoc(collection(db, "projects"), { ...data, image: imageUrl });
+      }
+
+      fetchProjects();
+      resetForm();
+    } catch (error) {
+      console.error("Error saving project:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (confirmDelete) {
+      try {
+        const docRef = doc(db, "projects", confirmDelete);
+        await deleteDoc(docRef);
+        fetchProjects();
+        setConfirmDelete(null);
+      } catch (error) {
+        console.error("Error deleting project:", error);
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      id: "",
+      title: "",
+      description: "",
+      details: "",
+      technologies: [],
+      link: "",
+      image: "",
+    });
+    setImageFile(null);
+    setIsEditing(false);
+  };
+
+  const startEdit = (project: Project) => {
+    setFormData(project);
+    setIsEditing(true);
+  };
+
+  const buttonStyles = `
+    py-2 px-4 rounded-lg font-semibold shadow-lg transition-transform 
+    transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
+  `;
 
   return (
     <section
@@ -51,19 +151,7 @@ const ProjectsSection: React.FC = () => {
       >
         My Projects
       </motion.h2>
-      <motion.p
-        className={`text-center max-w-2xl mx-auto mb-16 leading-relaxed ${
-          theme === "dark" ? "text-gray-400" : "text-gray-600"
-        }`}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        Explore some of the exciting projects I’ve worked on, showcasing my
-        expertise in building modern web and mobile solutions.
-      </motion.p>
 
-      {/* Swiper Carousel */}
       <Swiper
         spaceBetween={30}
         slidesPerView={1}
@@ -77,10 +165,10 @@ const ProjectsSection: React.FC = () => {
         modules={[Pagination, Navigation]}
         className="mb-12"
       >
-        {projects.map((project, index) => (
-          <SwiperSlide key={index}>
+        {projects.map((project) => (
+          <SwiperSlide key={project.id}>
             <motion.div
-              className={`relative rounded-xl overflow-hidden shadow-lg ${
+              className={`relative rounded-xl overflow-hidden shadow-lg transform transition-transform ${
                 theme === "dark" ? "bg-gray-800" : "bg-white"
               }`}
               whileHover={{ scale: 1.05 }}
@@ -99,19 +187,47 @@ const ProjectsSection: React.FC = () => {
                 >
                   {project.description}
                 </p>
-                <button
-                  onClick={() => setSelectedProject(project)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded transition-transform transform hover:scale-105"
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => setSelectedProject(project)}
+                    className={`bg-blue-500 hover:bg-blue-600 text-white ${buttonStyles}`}
+                  >
+                    View Details
+                  </button>
+                  <button
+                    onClick={() => startEdit(project)}
+                    className={`bg-yellow-500 hover:bg-yellow-600 text-white ${buttonStyles}`}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(project.id)}
+                    className={`bg-red-500 hover:bg-red-600 text-white ${buttonStyles}`}
+                  >
+                    Delete
+                  </button>
+                </div>
+                <a
+                  href={project.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block mt-4 text-blue-600 hover:underline"
                 >
-                  View Details
-                </button>
+                  Visit Project
+                </a>
               </div>
             </motion.div>
           </SwiperSlide>
         ))}
       </Swiper>
 
-      {/* Modal for project details */}
+      <motion.button
+        className={`mt-12 mx-auto block bg-blue-500 hover:bg-blue-600 text-white ${buttonStyles}`}
+        onClick={() => setIsEditing(true)}
+      >
+        Add New Project
+      </motion.button>
+
       <AnimatePresence>
         {selectedProject && (
           <motion.div
@@ -119,13 +235,10 @@ const ProjectsSection: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
           >
             <motion.div
               className={`rounded-lg max-w-2xl w-full p-8 shadow-lg ${
-                theme === "dark"
-                  ? "bg-gray-800 text-white"
-                  : "bg-white text-gray-800"
+                theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-800"
               }`}
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -140,13 +253,7 @@ const ProjectsSection: React.FC = () => {
                 alt={selectedProject.title}
                 className="w-full h-64 object-cover rounded-lg mb-4"
               />
-              <p
-                className={`mb-4 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                {selectedProject.details}
-              </p>
+              <p className="mb-4">{selectedProject.details}</p>
               <div className="text-sm mb-4">
                 <strong>Technologies:</strong>{" "}
                 {selectedProject.technologies.join(", ")}
@@ -154,7 +261,7 @@ const ProjectsSection: React.FC = () => {
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setSelectedProject(null)}
-                  className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+                  className={`bg-gray-500 text-white ${buttonStyles}`}
                 >
                   Close
                 </button>
@@ -162,7 +269,7 @@ const ProjectsSection: React.FC = () => {
                   href={selectedProject.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                  className={`bg-blue-500 text-white ${buttonStyles}`}
                 >
                   Visit Project
                 </a>
@@ -171,6 +278,120 @@ const ProjectsSection: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {isEditing && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">
+              {formData.id ? "Edit Project" : "Add Project"}
+            </h3>
+            <form onSubmit={handleFormSubmit}>
+              <input
+                type="text"
+                placeholder="Title"
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, title: e.target.value }))
+                }
+                className="block w-full p-3 border rounded mb-4"
+                required
+              />
+              <textarea
+                placeholder="Description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                className="block w-full p-3 border rounded mb-4"
+                required
+              />
+              <textarea
+                placeholder="Details"
+                value={formData.details}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, details: e.target.value }))
+                }
+                className="block w-full p-3 border rounded mb-4"
+              />
+              <input
+                type="url"
+                placeholder="Project Link"
+                value={formData.link}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, link: e.target.value }))
+                }
+                className="block w-full p-3 border rounded mb-4"
+                required
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                className="block w-full p-3 border rounded mb-4"
+              />
+              {formData.image && (
+                <div className="mb-4">
+                  <img
+                    src={formData.image}
+                    alt="Preview"
+                    className="w-full h-56 object-cover rounded"
+                  />
+                </div>
+              )}
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  className={`bg-gray-500 text-white ${buttonStyles}`}
+                  onClick={resetForm}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={`bg-blue-500 text-white ${buttonStyles}`}
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </motion.div>
+      )}
+
+      {confirmDelete && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm text-center">
+            <p className="text-lg mb-4">
+              Are you sure you want to delete this project?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                className={`bg-gray-500 text-white ${buttonStyles}`}
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={`bg-red-500 text-white ${buttonStyles}`}
+                onClick={handleDelete}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </section>
   );
 };

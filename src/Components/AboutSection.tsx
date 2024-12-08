@@ -1,255 +1,311 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+
 import {
-  FaUniversity,
-  FaBriefcase,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
   FaGraduationCap,
-  FaBuilding,
+  FaBriefcase,
+  FaPlus,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
 import { useTheme } from "./ThemProvider";
+import { db } from "../firebase";
+
+interface Education {
+  id: string;
+  title: string;
+  institution?: string;
+  company?: string;
+  period: string;
+  imageUrl: string;
+}
+
+interface Experience {
+  id: string;
+  title: string;
+  institution?: string;
+  company?: string;
+  period: string;
+  imageUrl: string;
+}
 
 const EducationExperience: React.FC = () => {
-  const { theme } = useTheme(); // Get the current theme
+  const { theme } = useTheme();
+  const [education, setEducation] = useState<Education[]>([]);
+  const [experience, setExperience] = useState<Experience[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [formType, setFormType] = useState<"education" | "experience" | null>(
+    null
+  );
+  const [formData, setFormData] = useState<{
+    id: string;
+    title: string;
+    institution?: string;
+    company?: string;
+    period: string;
+    imageUrl: string;
+  }>({
+    id: "",
+    title: "",
+    institution: "",
+    company: "",
+    period: "",
+    imageUrl: "",
+  });
+  const [file, setFile] = useState<File | null>(null);
+
+  const storage = getStorage(); // Firebase Storage
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const educationSnapshot = await getDocs(collection(db, "education"));
+      const experienceSnapshot = await getDocs(collection(db, "experience"));
+
+      setEducation(
+        educationSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Education[]
+      );
+      setExperience(
+        experienceSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Experience[]
+      );
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Handle Image Upload
+  const handleImageUpload = async (): Promise<string> => {
+    if (!file) return formData.imageUrl || "";
+    const storageRef = ref(storage, `${formType}/${file.name}`);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  };
+
+  // Handle Form Submission
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { id, title, institution, company, period } = formData;
+
+    try {
+      const imageUrl = await handleImageUpload();
+
+      if (id) {
+        // Update existing record
+        const collectionName = formType === "education" ? "education" : "experience";
+        const docRef = doc(db, collectionName, id);
+        await updateDoc(docRef, { title, institution, company, period, imageUrl });
+      } else {
+        // Add new record
+        const collectionName = formType === "education" ? "education" : "experience";
+        const docRef = collection(db, collectionName);
+        await addDoc(docRef, { title, institution, company, period, imageUrl });
+      }
+      fetchData();
+      setFormData({ id: "", title: "", institution: "", company: "", period: "", imageUrl: "" });
+      setFile(null);
+      setFormType(null);
+    } catch (error) {
+      console.error("Error adding/updating document:", error);
+    }
+  };
+
+  // Handle Delete Operation
+  const handleDelete = async (id: string, type: "education" | "experience") => {
+    try {
+      const collectionName = type === "education" ? "education" : "experience";
+      const docRef = doc(db, collectionName, id);
+      await deleteDoc(docRef);
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting document:", error);
+    }
+  };
 
   const fadeIn = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8, ease: "easeOut", staggerChildren: 0.2 },
-    },
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
   };
 
-  const cardVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
+  const staggerChildren = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.3 } },
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <section
-      className={`relative py-20 px-8 overflow-hidden ${
+      className={`relative py-20 px-8 ${
         theme === "dark"
-          ? "bg-gradient-to-b from-black via-gray-900 to-blue-900"
-          : "bg-gradient-to-b from-gray-100 via-gray-200 to-blue-50"
+          ? "bg-gradient-to-b from-gray-900 to-gray-700 text-white"
+          : "bg-gradient-to-b from-gray-50 to-blue-100 text-gray-800"
       }`}
       id="education-experience"
     >
-      {/* Animated Background Shapes */}
-      <div
-        className={`absolute top-0 left-0 w-72 h-72 ${
-          theme === "dark" ? "bg-blue-500" : "bg-blue-300"
-        } rounded-full blur-2xl opacity-20 animate-pulse`}
-      ></div>
-      <div
-        className={`absolute bottom-0 right-0 w-96 h-96 ${
-          theme === "dark" ? "bg-cyan-500" : "bg-cyan-300"
-        } rounded-full blur-2xl opacity-20 animate-pulse`}
-      ></div>
-
-      {/* Section Header */}
       <motion.div
         className="max-w-4xl mx-auto text-center"
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{ once: true }}
         variants={fadeIn}
       >
-        <h2
-          className={`text-5xl font-extrabold mb-6 ${
-            theme === "dark" ? "text-white" : "text-gray-800"
-          }`}
-        >
-          Education & Experience
-        </h2>
+        <h2 className="text-5xl font-extrabold mb-6">Education & Experience</h2>
         <p
-          className={`text-lg mb-12 leading-relaxed ${
-            theme === "dark" ? "text-blue-300" : "text-blue-600"
+          className={`text-lg ${
+            theme === "dark" ? "text-gray-400" : "text-gray-600"
           }`}
         >
-          A glimpse of my academic journey and professional milestones.
+          A detailed look at my academic and professional journey.
         </p>
       </motion.div>
 
       {/* Education Section */}
       <motion.div
-        className="mb-16"
+        className="my-16"
         initial="hidden"
-        whileInView="visible"
-        viewport={{ once: false, amount: 0.2 }}
-        variants={fadeIn}
+        animate="visible"
+        variants={staggerChildren}
       >
-        <h3
-          className={`text-3xl font-bold mb-6 text-center ${
-            theme === "dark" ? "text-white" : "text-gray-800"
-          }`}
-        >
-          Education
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
-          {[
-            {
-              icon: (
-                <FaGraduationCap
-                  size={28}
-                  className={`${
-                    theme === "dark" ? "text-blue-400" : "text-blue-600"
-                  } mb-3`}
-                />
-              ),
-              title: "Bachelor of Computer Engineering",
-              institution: "University of Ruhuna",
-              period: "2019 - 2023",
-            },
-            {
-              icon: (
-                <FaUniversity
-                  size={28}
-                  className={`${
-                    theme === "dark" ? "text-green-400" : "text-green-600"
-                  } mb-3`}
-                />
-              ),
-              title: "Advanced Level Studies",
-              institution: "Rahula College, Matara",
-              period: "2016 - 2018",
-            },
-            {
-              icon: (
-                <FaGraduationCap
-                  size={28}
-                  className={`${
-                    theme === "dark" ? "text-purple-400" : "text-purple-600"
-                  } mb-3`}
-                />
-              ),
-              title: "O Level Studies",
-              institution: "Rahula College, Matara",
-              period: "2012 - 2016",
-            },
-          ].map((edu, index) => (
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-3xl font-bold">Education</h3>
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => {
+              setFormType("education");
+              setFormData({
+                id: "",
+                title: "",
+                institution: "",
+                company: "",
+                period: "",
+                imageUrl: "",
+              });
+            }}
+          >
+            <FaPlus /> Add
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {education.map((edu) => (
             <motion.div
-              key={index}
-              className={`shadow-lg rounded-lg p-8 text-center transform hover:scale-105 hover:rotate-1 transition-transform duration-300 ease-out hover:shadow-2xl ${
-                theme === "dark" ? "bg-gray-800" : "bg-white"
-              }`}
-              variants={cardVariants}
+              key={edu.id}
+              className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-shadow"
+              variants={fadeIn}
             >
-              {edu.icon}
-              <h3
-                className={`text-xl font-bold mb-2 ${
-                  theme === "dark" ? "text-white" : "text-gray-800"
-                }`}
-              >
-                {edu.title}
-              </h3>
-              <p
-                className={`${
-                  theme === "dark" ? "text-blue-300" : "text-blue-600"
-                }`}
-              >
-                {edu.institution}
-              </p>
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-blue-400" : "text-blue-700"
-                }`}
-              >
-                {edu.period}
-              </p>
+              <img
+                src={edu.imageUrl}
+                alt={edu.title}
+                className="w-full h-48 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent p-4 flex flex-col justify-end">
+                <h3 className="text-xl font-bold text-white">{edu.title}</h3>
+                <p className="text-gray-300">{edu.institution}</p>
+                <p className="text-sm text-gray-400">{edu.period}</p>
+              </div>
+              <div className="absolute top-4 right-4 flex space-x-2">
+                <button
+                  className="text-blue-500 bg-white rounded-full p-2 shadow"
+                  onClick={() => {
+                    setFormType("education");
+                    setFormData({ ...edu, company: "" });
+                  }}
+                >
+                  <FaEdit />
+                </button>
+                <button
+                  className="text-red-500 bg-white rounded-full p-2 shadow"
+                  onClick={() => handleDelete(edu.id, "education")}
+                >
+                  <FaTrash />
+                </button>
+              </div>
             </motion.div>
           ))}
         </div>
       </motion.div>
 
       {/* Experience Section */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: false, amount: 0.2 }}
-        variants={fadeIn}
-      >
-        <h3
-          className={`text-3xl font-bold mb-6 text-center ${
-            theme === "dark" ? "text-white" : "text-gray-800"
-          }`}
-        >
-          Experience
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
-          {[
-            {
-              icon: (
-                <FaBriefcase
-                  size={28}
-                  className={`${
-                    theme === "dark" ? "text-blue-400" : "text-blue-600"
-                  } mb-3`}
-                />
-              ),
-              title: "Full Stack Developer Intern",
-              company: "Tech Solutions Pvt Ltd",
-              period: "2022 - 2023",
-            },
-            {
-              icon: (
-                <FaBuilding
-                  size={28}
-                  className={`${
-                    theme === "dark" ? "text-green-400" : "text-green-600"
-                  } mb-3`}
-                />
-              ),
-              title: "Junior Software Engineer",
-              company: "Innovative Systems Inc.",
-              period: "2021 - 2022",
-            },
-            {
-              icon: (
-                <FaBriefcase
-                  size={28}
-                  className={`${
-                    theme === "dark" ? "text-purple-400" : "text-purple-600"
-                  } mb-3`}
-                />
-              ),
-              title: "Freelance Developer",
-              company: "Self-employed",
-              period: "2020 - Present",
-            },
-          ].map((exp, index) => (
+      <motion.div initial="hidden" animate="visible" variants={staggerChildren}>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-3xl font-bold">Experience</h3>
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => {
+              setFormType("experience");
+              setFormData({
+                id: "",
+                title: "",
+                institution: "",
+                company: "",
+                period: "",
+                imageUrl: "",
+              });
+            }}
+          >
+            <FaPlus /> Add
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {experience.map((exp) => (
             <motion.div
-              key={index}
-              className={`shadow-lg rounded-lg p-8 text-center transform hover:scale-105 hover:rotate-1 transition-transform duration-300 ease-out hover:shadow-2xl ${
-                theme === "dark" ? "bg-gray-800" : "bg-white"
-              }`}
-              variants={cardVariants}
+              key={exp.id}
+              className="relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-shadow"
+              variants={fadeIn}
             >
-              {exp.icon}
-              <h3
-                className={`text-xl font-bold mb-2 ${
-                  theme === "dark" ? "text-white" : "text-gray-800"
-                }`}
-              >
-                {exp.title}
-              </h3>
-              <p
-                className={`${
-                  theme === "dark" ? "text-blue-300" : "text-blue-600"
-                }`}
-              >
-                {exp.company}
-              </p>
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-blue-400" : "text-blue-700"
-                }`}
-              >
-                {exp.period}
-              </p>
+              <img
+                src={exp.imageUrl}
+                alt={exp.title}
+                className="w-full h-48 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent p-4 flex flex-col justify-end">
+                <h3 className="text-xl font-bold text-white">{exp.title}</h3>
+                <p className="text-gray-300">{exp.company}</p>
+                <p className="text-sm text-gray-400">{exp.period}</p>
+              </div>
+              <div className="absolute top-4 right-4 flex space-x-2">
+                <button
+                  className="text-blue-500 bg-white rounded-full p-2 shadow"
+                  onClick={() => {
+                    setFormType("experience");
+                    setFormData({ ...exp, institution: "" });
+                  }}
+                >
+                  <FaEdit />
+                </button>
+                <button
+                  className="text-red-500 bg-white rounded-full p-2 shadow"
+                  onClick={() => handleDelete(exp.id, "experience")}
+                >
+                  <FaTrash />
+                </button>
+              </div>
             </motion.div>
           ))}
         </div>
