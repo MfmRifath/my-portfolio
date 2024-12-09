@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { FiMenu, FiX, FiSun, FiMoon } from "react-icons/fi";
+import { FiMenu, FiX, FiSun, FiMoon, FiUploadCloud, FiDownload } from "react-icons/fi";
 import { useTheme } from "./ThemProvider";
 import { Link as ScrollLink } from "react-scroll";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const navLinks = [
   { name: "Home", to: "hero" },
@@ -19,13 +20,15 @@ const Header: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [cvDownloadUrl, setCvDownloadUrl] = useState<string | null>(null);
 
   const auth = getAuth();
+  const storage = getStorage();
 
   // Monitor authentication state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsLoggedIn(!!user); // Update login state
+      setIsLoggedIn(!!user);
     });
     return () => unsubscribe();
   }, [auth]);
@@ -40,6 +43,35 @@ const Header: React.FC = () => {
       console.error("Error during logout:", error);
     }
   };
+
+  // Handle CV Upload
+  const handleCvUpload = async (file: File) => {
+    if (!file || !isLoggedIn) return;
+    try {
+      const storageRef = ref(storage, `cv/${file.name}`);
+      await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(storageRef);
+      setCvDownloadUrl(downloadUrl);
+      alert("CV uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading CV:", error);
+      alert("Failed to upload CV. Please try again.");
+    }
+  };
+
+  // Fetch CV Download URL (visible to all)
+  useEffect(() => {
+    const fetchCvDownloadUrl = async () => {
+      const storageRef = ref(storage, "cv/sample-cv.pdf"); // Replace with the correct CV path
+      try {
+        const downloadUrl = await getDownloadURL(storageRef);
+        setCvDownloadUrl(downloadUrl);
+      } catch (error) {
+        console.error("Error fetching CV download URL:", error);
+      }
+    };
+    fetchCvDownloadUrl();
+  }, []);
 
   return (
     <header className="bg-gradient-to-r from-gray-900 via-gray-800 to-black text-white shadow-lg sticky top-0 z-50">
@@ -81,14 +113,34 @@ const Header: React.FC = () => {
               Log In
             </a>
           )}
-          {/* Download CV Button */}
-          <a
-            href="/path-to-your-cv.pdf"
-            download
-            className="ml-4 bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-          >
-            Download CV
-          </a>
+          {/* Upload CV Button (Visible to Logged-in Users Only) */}
+          {isLoggedIn && (
+            <label className="cursor-pointer ml-4 p-2 rounded-full bg-gray-700 hover:bg-gray-600 shadow-md transition-all duration-300">
+              <FiUploadCloud size={24} />
+              <input
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    handleCvUpload(e.target.files[0]);
+                  }
+                }}
+              />
+            </label>
+          )}
+          {/* Download CV Button (Visible to All Users) */}
+          {cvDownloadUrl && (
+            <a
+              href={cvDownloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-4 p-2 rounded-full bg-green-600 hover:bg-green-500 shadow-md transition-all duration-300"
+              aria-label="Download CV"
+            >
+              <FiDownload size={24} />
+            </a>
+          )}
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -140,13 +192,16 @@ const Header: React.FC = () => {
             </a>
           )}
           {/* Download CV Button */}
-          <a
-            href="/path-to-your-cv.pdf"
-            download
-            className="block w-full text-center bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-          >
-            Download CV
-          </a>
+          {cvDownloadUrl && (
+            <a
+              href={cvDownloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-center bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            >
+              Download CV
+            </a>
+          )}
         </div>
       )}
     </header>

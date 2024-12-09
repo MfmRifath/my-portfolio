@@ -48,6 +48,7 @@ const CertificationsSection: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [flippedStates, setFlippedStates] = useState<boolean[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track authentication state
+  const [loading, setLoading] = useState(false);
 
   const auth = getAuth();
 
@@ -272,22 +273,148 @@ const CertificationsSection: React.FC = () => {
         </motion.button>
       )}
 
-      {isEditing && (
-        <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">
-              {formData.id ? "Edit Certification" : "Add Certification"}
-            </h3>
-            <form onSubmit={handleFormSubmit}>
-              {/* Form fields here */}
-            </form>
-          </div>
-        </motion.div>
+{isEditing && (
+  <motion.div
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+  >
+    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+      <h3 className="text-xl font-bold mb-4">
+        {formData.id ? "Edit Certification" : "Add Certification"}
+      </h3>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 z-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+        </div>
       )}
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setLoading(true); // Start loading
+          try {
+            await handleFormSubmit(e);
+          } catch (error) {
+            console.error(error);
+          } finally {
+            setLoading(false); // Stop loading
+          }
+        }}
+        className="space-y-4"
+      >
+        <div>
+          <label
+            htmlFor="title"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Title
+          </label>
+          <input
+            type="text"
+            id="title"
+            value={formData.title}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="institution"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Institution
+          </label>
+          <input
+            type="text"
+            id="institution"
+            value={formData.institution}
+            onChange={(e) =>
+              setFormData({ ...formData, institution: e.target.value })
+            }
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="date"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Date
+          </label>
+          <input
+            type="date"
+            id="date"
+            value={formData.date}
+            onChange={(e) =>
+              setFormData({ ...formData, date: e.target.value })
+            }
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            required
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="logo"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Logo
+          </label>
+          <input
+            type="file"
+            id="logo"
+            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            className="mt-1 block w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          />
+          {formData.logo && !imageFile && (
+            <img
+              src={formData.logo}
+              alt="Certification Logo"
+              className="mt-2 h-16 w-16 object-cover rounded"
+            />
+          )}
+        </div>
+        <div>
+          <label
+            htmlFor="link"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Certification Link
+          </label>
+          <input
+            type="url"
+            id="link"
+            value={formData.link}
+            onChange={(e) =>
+              setFormData({ ...formData, link: e.target.value })
+            }
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          />
+        </div>
+        <div className="flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={resetForm}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            disabled={loading}
+          >
+            {loading ? "Saving..." : formData.id ? "Save Changes" : "Add Certification"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </motion.div>
+)}
     </section>
   );
 };

@@ -121,32 +121,19 @@ const HeroSection: React.FC = () => {
           variants={itemVariants}
         >
           {/* Primary Button */}
-          <motion.button
-            className={`py-3 px-10 font-bold rounded-full shadow-lg transition-all ${
-              theme === "dark"
-                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600"
-                : "bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-cyan-800"
-            }`}
-            variants={buttonHover}
-            whileHover="hover"
-            whileTap="tap"
-          >
-            Let’s Work Together
-          </motion.button>
-
-          {/* Secondary Button */}
-          <motion.button
-            className={`py-3 px-10 font-bold rounded-full border-2 shadow-lg transition-all ${
-              theme === "dark"
-                ? "border-blue-500 text-white hover:bg-blue-500 hover:text-black"
-                : "border-blue-600 text-gray-900 hover:bg-blue-600 hover:text-white"
-            }`}
-            variants={buttonHover}
-            whileHover="hover"
-            whileTap="tap"
-          >
-            View My Portfolio
-          </motion.button>
+        <motion.button
+          className={`py-3 px-10 font-bold rounded-full shadow-lg transition-all ${
+            theme === "dark"
+              ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600"
+              : "bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-cyan-800"
+          }`}
+          variants={buttonHover}
+          whileHover="hover"
+          whileTap="tap"
+          onClick={() => window.open('https://www.fiverr.com/s/5rdyNgk', '_blank')}
+        >
+          Let’s Work Together
+        </motion.button>
         </motion.div>
 
         {/* Social Media Icons */}

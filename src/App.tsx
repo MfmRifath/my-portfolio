@@ -12,6 +12,7 @@ import ContactForm from "./Components/ContactForm";
 import Login from "./Components/Login";
 import Footer from "./Components/Footer";
 import { useEffect, useRef, useState } from "react";
+import { Certificate } from "crypto";
 // Hook for detecting element visibility
 const useIntersectionObserver = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -112,15 +113,21 @@ const App: React.FC = () => {
           <ProjectsSection/>
         
       </Section>
-      <Section id="contact" animationClass="opacity-100 translate-y-0">
+      <Section id="ideas" animationClass="opacity-100 translate-y-0">
         
         <ProjectIdeaSection/>
         
       </Section>
+      
+      <Section id="certification" animationClass="opacity-100 translate-y-0">
+      
+        <CertificationsSection/>
+      
+      </Section>
       <Section id="contact" animationClass="opacity-100 translate-y-0">
-      
+        
         <ContactForm/>
-      
+        
       </Section>
     
     </div>
