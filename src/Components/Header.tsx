@@ -202,6 +202,14 @@ const Header: React.FC = () => {
               Download CV
             </a>
           )}
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="ml-4 p-2 rounded-full bg-gray-700 hover:bg-gray-600 shadow-md transition-all duration-300"
+            aria-label="Toggle Theme"
+          >
+            {theme === "light" ? <FiMoon size={24} /> : <FiSun size={24} />}
+          </button>
         </div>
       )}
     </header>

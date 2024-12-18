@@ -40,6 +40,7 @@ const ProjectsSection: React.FC = () => {
     link: "",
     image: "",
   });
+  const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -48,10 +49,10 @@ const ProjectsSection: React.FC = () => {
 
   const auth = getAuth();
 
-  // Check user authentication state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      console.log("User state changed:", currentUser);
     });
     return () => unsubscribe();
   }, []);
@@ -59,6 +60,7 @@ const ProjectsSection: React.FC = () => {
   const fetchProjects = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "projects"));
+      console.log("Fetched Projects:", querySnapshot.docs.map((doc) => doc.data()));
       const fetchedProjects: Project[] = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
@@ -76,36 +78,41 @@ const ProjectsSection: React.FC = () => {
       console.error("Error fetching projects:", error);
     }
   };
-
   useEffect(() => {
     fetchProjects();
   }, []);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { id, ...data } = formData;
-
+    setLoading(true);
     try {
       let imageUrl = formData.image;
-
+  
+      // Upload the image if selected
       if (imageFile) {
         const storage = getStorage();
         const imageRef = ref(storage, `projects/${imageFile.name}`);
         await uploadBytes(imageRef, imageFile);
         imageUrl = await getDownloadURL(imageRef);
       }
-
-      if (id) {
-        const docRef = doc(db, "projects", id);
-        await updateDoc(docRef, { ...data, image: imageUrl });
+  
+      if (formData.id) {
+        // Update project
+        const docRef = doc(db, "projects", formData.id);
+        await updateDoc(docRef, { ...formData, image: imageUrl });
+        console.log("Project updated:", formData.id);
       } else {
-        await addDoc(collection(db, "projects"), { ...data, image: imageUrl });
+        // Add new project
+        await addDoc(collection(db, "projects"), { ...formData, image: imageUrl });
+        console.log("New project added");
       }
-
+  
       fetchProjects();
       resetForm();
     } catch (error) {
-      console.error("Error saving project:", error);
+      console.error("Error adding/updating project:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,6 +121,7 @@ const ProjectsSection: React.FC = () => {
       try {
         const docRef = doc(db, "projects", confirmDelete);
         await deleteDoc(docRef);
+        console.log("Project deleted:", confirmDelete);
         fetchProjects();
         setConfirmDelete(null);
       } catch (error) {
@@ -295,94 +303,104 @@ const ProjectsSection: React.FC = () => {
       </AnimatePresence>
 
       {isEditing && (
-        <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">
-              {formData.id ? "Edit Project" : "Add Project"}
-            </h3>
-            <form onSubmit={handleFormSubmit}>
-              <input
-                type="text"
-                placeholder="Title"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, title: e.target.value }))
-                }
-                className="block w-full p-3 border rounded mb-4"
-                required
-              />
-              <textarea
-                placeholder="Description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                className="block w-full p-3 border rounded mb-4"
-                required
-              />
-              <textarea
-                placeholder="Details"
-                value={formData.details}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, details: e.target.value }))
-                }
-                className="block w-full p-3 border rounded mb-4"
-              />
-              <input
-                type="url"
-                placeholder="Project Link"
-                value={formData.link}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, link: e.target.value }))
-                }
-                className="block w-full p-3 border rounded mb-4"
-                required
-              />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                className="block w-full p-3 border rounded mb-4"
-              />
-              {formData.image && (
-                <div className="mb-4">
-                  <img
-                    src={formData.image}
-                    alt="Preview"
-                    className="w-full h-56 object-cover rounded"
-                  />
-                </div>
-              )}
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  className={`bg-gray-500 text-white ${buttonStyles}`}
-                  onClick={resetForm}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={`bg-blue-500 text-white ${buttonStyles}`}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
+  <motion.div
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+  >
+    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+      <h3 className="text-xl font-bold mb-4">
+        {formData.id ? "Edit Project" : "Add Project"}
+      </h3>
+      <form
+        onSubmit={(e) => handleFormSubmit(e)}
+      >
+        <input
+          type="text"
+          placeholder="Title"
+          value={formData.title}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, title: e.target.value }))
+          }
+          className="block w-full p-3 border rounded mb-4"
+          required
+        />
+        <textarea
+          placeholder="Description"
+          value={formData.description}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              description: e.target.value,
+            }))
+          }
+          className="block w-full p-3 border rounded mb-4"
+          required
+        />
+        <textarea
+          placeholder="Details"
+          value={formData.details}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, details: e.target.value }))
+          }
+          className="block w-full p-3 border rounded mb-4"
+        />
+        <input
+          type="url"
+          placeholder="Project Link"
+          value={formData.link}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, link: e.target.value }))
+          }
+          className="block w-full p-3 border rounded mb-4"
+          required
+        />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+          className="block w-full p-3 border rounded mb-4"
+        />
+        {formData.image && (
+          <div className="mb-4">
+            <img
+              src={formData.image}
+              alt="Preview"
+              className="w-full h-56 object-cover rounded"
+            />
           </div>
-        </motion.div>
-      )}
+        )}
+        <div className="flex justify-end space-x-4">
+          <button
+            type="button"
+            className={`bg-gray-500 text-white ${buttonStyles}`}
+            onClick={resetForm}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className={`bg-blue-500 text-white ${buttonStyles}`}
+            disabled={loading} // Disable the button while loading
+          >
+            {loading ? (
+              <div className="flex items-center space-x-2">
+                <span>Saving</span>
+                <span className="loader w-4 h-4 border-2 border-t-blue-500 border-gray-300 rounded-full animate-spin"></span>
+              </div>
+            ) : (
+              "Save"
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  </motion.div>
+)}
 
       {confirmDelete && (
         <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-100"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
